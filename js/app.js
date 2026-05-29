@@ -196,5 +196,10 @@ function createDashboard() {
     return div;
 }
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', initApp);
+// Initialize on load with dynamic data loading
+document.addEventListener('DOMContentLoaded', async () => {
+    if (window.loadDataFromServer) {
+        await window.loadDataFromServer();
+    }
+    initApp();
+});

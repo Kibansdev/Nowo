@@ -1,0 +1,13 @@
+{
+  "name": "nowo-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for Nowo / Espacio Alvarado",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.4.1"
+  }
+}

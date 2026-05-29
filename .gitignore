@@ -1,4 +1,6 @@
 .DS_Store
+node_modules/
+mcp-server/node_modules/
 Thumbs.db
 .idea/
 .vscode/
