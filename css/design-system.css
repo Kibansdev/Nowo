@@ -1,0 +1,129 @@
+:root {
+  /* ══════════════════════════════════════════
+     Espacio Alvarado — Premium Design System
+     Palette: Sage · Terracotta · Cream · Charcoal
+     Holistic wellness coworking
+     ══════════════════════════════════════════ */
+
+  /* Core Backgrounds */
+  --bg-main:          #F5F0E8;          /* warm cream */
+  --bg-sidebar:       #2C2C34;          /* deep charcoal */
+  --bg-card:          #ffffff;
+  --bg-card-alt:      #FAF8F5;
+  --bg-input:         #f7f5f2;
+
+  /* Glass / overlays */
+  --bg-glass:         rgba(255, 255, 255, 0.75);
+  --bg-glass-heavy:   rgba(255, 255, 255, 0.96);
+
+  /* Text — light on dark (sidebar) */
+  --color-sidebar-text:       rgba(255, 255, 255, 0.88);
+  --color-sidebar-text-muted: rgba(255, 255, 255, 0.38);
+  --color-sidebar-divider:    rgba(255, 255, 255, 0.08);
+
+  /* Text — dark on cream */
+  --color-text-primary:   #111118;
+  --color-text-secondary: #52525e;
+  --color-text-muted:     #a0a0ae;
+
+  /* Accent — Sage Green (primary) */
+  --color-accent:       #7A8B6F;
+  --color-accent-dark:  #5E6E55;
+  --color-accent-light: #E8EDE5;
+  --color-accent-glow:  rgba(122, 139, 111, 0.18);
+
+  /* Secondary accent — Terracotta */
+  --color-terracotta:       #C4956A;
+  --color-terracotta-dark:  #A67B52;
+  --color-terracotta-light: #F5EDE5;
+
+  /* Muted Gold (tertiary, premium details) */
+  --color-gold:        #B8944F;
+
+  /* Active nav on dark sidebar */
+  --color-nav-active-bg:   rgba(122, 139, 111, 0.16);
+  --color-nav-active-text: #9BAF93;
+
+  /* Status */
+  --color-success: #3d9970;
+  --color-warning: #e6a817;
+  --color-error:   #c0392b;
+
+  /* Highlight */
+  --color-highlight: #7A8B6F;
+
+  /* Typography */
+  --font-main:    'DM Sans', sans-serif;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+
+  /* Spacing */
+  --spacing-xs:  0.5rem;
+  --spacing-sm:  1rem;
+  --spacing-md:  1.75rem;
+  --spacing-lg:  2.5rem;
+  --spacing-xl:  4rem;
+
+  /* Radius — restrained, professional */
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-card:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 4px 16px rgba(0, 0, 0, 0.06);
+
+  --shadow-float:
+    0 8px 32px rgba(0, 0, 0, 0.10),
+    0 2px 8px  rgba(0, 0, 0, 0.06);
+
+  --shadow-sidebar:
+    4px 0 24px rgba(0, 0, 0, 0.14);
+
+  /* Animation */
+  --transition-smooth: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  --glass-blur: blur(16px);
+}
+
+/* ── Reset / Base ────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background: var(--bg-main);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+h3, h4 {
+  font-family: var(--font-main);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-main);
+  transition: var(--transition-smooth);
+}
+
+/* ── Animations ──────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#app { animation: fadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1); }

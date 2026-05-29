@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug - Espacio Alvarado</title>
+  <link rel="stylesheet" href="css/design-system.css?v=20260527">
+  <link rel="stylesheet" href="css/styles.css?v=20260527">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="debug-output" style="position:fixed;top:0;left:0;right:0;background:#111;color:#0f0;font-family:monospace;font-size:12px;padding:10px;z-index:99999;max-height:40vh;overflow-y:auto;white-space:pre-wrap;"></div>
+  <div id="app"></div>
+
+  <script>
+    var dbg = document.getElementById('debug-output');
+    function log(msg) { dbg.textContent += msg + '\n'; console.log(msg); }
+    window.onerror = function(msg, src, line, col, err) {
+      log('❌ ERROR: ' + msg + '\n   File: ' + src.split('/').pop() + ' Line: ' + line);
+      return false;
+    };
+    log('🔧 Debug mode active');
+  </script>
+
+  <script src="js/data.js?v=debug1"></script>
+  <script>log('✅ data.js loaded. profData: ' + (window._profData||[]).length + ', wsData: ' + (window._workshopsData||[]).length);</script>
+
+  <script src="js/components/AssistantDashboard.js?v=debug1"></script>
+  <script>log('✅ AssistantDashboard.js');</script>
+
+  <script src="js/components/WhatsAppViewer.js?v=debug1"></script>
+  <script>log('✅ WhatsAppViewer.js');</script>
+
+  <script src="js/components/HourExchange.js?v=debug1"></script>
+  <script>log('✅ HourExchange.js');</script>
+
+  <script src="js/components/ActivityManager.js?v=debug1"></script>
+  <script>log('✅ ActivityManager.js - renderActivity: ' + typeof window.renderActivity);</script>
+
+  <script src="js/components/WorkshopsManager.js?v=debug1"></script>
+  <script>log('✅ WorkshopsManager.js');</script>
+
+  <script src="js/components/SmartWidgets.js?v=debug1"></script>
+  <script>log('✅ SmartWidgets.js');</script>
+
+  <script src="js/components/PanicButton.js?v=debug1"></script>
+  <script>log('✅ PanicButton.js');</script>
+
+  <script src="js/components/NUWOConnect.js?v=debug1"></script>
+  <script>log('✅ NUWOConnect.js');</script>
+
+  <script src="js/components/AnalyticsDashboard.js?v=debug1"></script>
+  <script>log('✅ AnalyticsDashboard.js');</script>
+
+  <script src="js/components/Telemedicine.js?v=debug1"></script>
+  <script>log('✅ Telemedicine.js');</script>
+
+  <script src="js/icons.js?v=debug1"></script>
+  <script>log('✅ icons.js');</script>
+
+  <script src="js/app.js?v=debug1"></script>
+  <script>log('✅ app.js loaded - initApp should fire on DOMContentLoaded');</script>
+</body>
+</html>
