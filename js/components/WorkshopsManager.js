@@ -121,7 +121,7 @@ window.renderWorkshops = function (container) {
         </div>
 
         <div style="padding:12px 16px;background:${sage}08;border:1px dashed ${sage}30;border-radius:8px;">
-          <span style="font-size:0.78rem;color:${sage};font-weight:600;">💡 Las sesiones y horarios de este taller se asignan desde la sección <strong>Actividad</strong></span>
+          <span style="font-size:0.78rem;color:${sage};font-weight:600;">Las sesiones y horarios de este taller se asignan desde la sección <strong>Actividad</strong></span>
         </div>
 
         <!-- Bottom: Buttons -->
@@ -318,8 +318,8 @@ window.renderWorkshops = function (container) {
         </div>
 
         <div style="padding: 0 28px 8px;">
-          <!-- Nombre + Capacidad -->
-          <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <!-- Nombre + Capacidad + Precio -->
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; margin-bottom: 14px;">
             <div class="field-group" style="margin-bottom:0;">
               <label>Nombre del Taller / Clase</label>
               <input type="text" value="${modalData.name}" id="mws-name" placeholder="Ej. Yoga Terapéutico" oninput="document.getElementById('modal-color-indicator').textContent = this.value ? this.value.charAt(0).toUpperCase() : 'T'">
@@ -327,6 +327,10 @@ window.renderWorkshops = function (container) {
             <div class="field-group" style="margin-bottom:0;">
               <label>Cupo máx.</label>
               <input type="number" value="${modalData.total}" id="mws-total" min="1">
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Precio / Persona</label>
+              <input type="number" value="${modalData.price || 0}" id="mws-price" min="0">
             </div>
           </div>
 
@@ -346,6 +350,7 @@ window.renderWorkshops = function (container) {
             onclick="
               const name = document.getElementById('mws-name').value.trim();
               const total = parseInt(document.getElementById('mws-total').value, 10) || 15;
+              const price = parseFloat(document.getElementById('mws-price').value) || 0;
               const descripcion = document.getElementById('mws-descripcion').value.trim();
 
               if (!name) {
@@ -353,7 +358,7 @@ window.renderWorkshops = function (container) {
                 return;
               }
 
-              const data = { name, total, descripcion };
+              const data = { name, total, price, descripcion };
 
               if (${isEdit}) {
                 window._workshopsData[${idx}] = {

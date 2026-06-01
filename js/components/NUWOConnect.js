@@ -5,9 +5,124 @@
 // ══════════════════════════════════════════════════════════
 
 window.renderNUWOConnect = function (container) {
+  
+  function getDefaultServices(prof) {
+    if (prof.services && prof.services.length > 0) {
+      return prof.services;
+    }
+    let price = 3000;
+    if (prof.room === 'Consultorio A') price = 3000;
+    else if (prof.room === 'Consultorio B') price = 2500;
+    else if (prof.room === 'Consultorio C') price = 3500;
+    else if (prof.room === 'Consultorio D') price = 2000;
+    return [
+      { name: prof.specialty || 'Consulta General', price: price, duration: 60, description: '' }
+    ];
+  }
+
+  window._addServiceRow = function(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = containerId === 'services-container' ? 'prof-service-row' : 'newprof-service-row';
+    div.style.cssText = 'background:var(--bg-card-alt); border:1px solid rgba(0,0,0,0.08); border-radius:var(--radius-sm); padding:16px; margin-bottom:12px; position:relative; text-align:left; box-sizing:border-box;';
+    
+    div.innerHTML = `
+      <div style="position:absolute; right:12px; top:12px;">
+        <button type="button" onclick="this.closest('.' + (containerId === 'services-container' ? 'prof-service-row' : 'newprof-service-row')).remove()" 
+          style="background:none; border:none; color:#C4956A; cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s;"
+          onmouseover="this.style.background='rgba(196,149,106,0.1)'"
+          onmouseout="this.style.background='none'"
+          title="Eliminar servicio">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4956A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+        </button>
+      </div>
+      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:14px; margin-bottom:10px; padding-right:40px;">
+        <div>
+          <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted); margin-bottom:4px;">Título del Servicio</label>
+          <input type="text" class="service-name" placeholder="Ej: Consulta Inicial" value="" 
+            style="width:100%; padding:9px 12px; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); font-family:var(--font-main); font-size:0.85rem; color:var(--color-text-primary); background:var(--bg-card); outline:none; box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted); margin-bottom:4px;">Precio ($)</label>
+          <div style="position:relative; width:100%;">
+            <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:0.85rem; color:var(--color-text-secondary); font-weight:600;">$</span>
+            <input type="number" class="service-price" placeholder="Valor" value="" 
+              style="width:100%; padding:9px 12px 9px 22px; font-size:0.85rem; text-align:right; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); font-family:var(--font-main); color:var(--color-text-primary); background:var(--bg-card); outline:none; box-sizing:border-box;">
+          </div>
+        </div>
+      </div>
+      <div>
+        <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted); margin-bottom:4px;">Descripción del Servicio</label>
+        <textarea class="service-description" placeholder="Explicá de qué trata el servicio..." 
+          style="width:100%; padding:9px 12px; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); font-family:var(--font-main); font-size:0.85rem; color:var(--color-text-primary); background:var(--bg-card); outline:none; box-sizing:border-box; min-height:50px; resize:vertical; line-height:1.5;"></textarea>
+      </div>
+      <input type="hidden" class="service-duration" value="60">
+    `;
+    container.appendChild(div);
+  };
+
+  window._saveProfile = function(index) {
+    const name = document.getElementById('prof-name')?.value?.trim();
+    const specialty = document.getElementById('prof-specialty')?.value?.trim();
+    const tel = document.getElementById('prof-tel')?.value?.trim() || '';
+    const email = document.getElementById('prof-email')?.value?.trim() || '';
+    const ig = document.getElementById('prof-ig')?.value?.trim() || '';
+    const room = document.getElementById('prof-room')?.value || '';
+    const status = document.getElementById('prof-status')?.value === 'true';
+
+    if (!name) { alert('Ingresá el nombre del profesional'); return; }
+    if (!specialty) { alert('Ingresá la especialidad'); return; }
+
+    const services = [];
+    const rows = document.querySelectorAll('.prof-service-row');
+    rows.forEach(row => {
+      const sName = row.querySelector('.service-name').value.trim();
+      const sPrice = parseFloat(row.querySelector('.service-price').value) || 0;
+      const sDuration = parseInt(row.querySelector('.service-duration').value) || 60;
+      const sDesc = row.querySelector('.service-description')?.value?.trim() || '';
+      if (sName) {
+        services.push({ name: sName, price: sPrice, duration: sDuration, description: sDesc });
+      }
+    });
+
+    window._profData[index] = {
+      ...window._profData[index],
+      name: name,
+      specialty: specialty,
+      tel: tel,
+      email: email,
+      ig: ig,
+      room: room,
+      color: window._selectedColor,
+      activo: status,
+      descripcion: window._profData[index].descripcion || '',
+      services: services
+    };
+
+    document.querySelector('.profile-modal-overlay')?.remove();
+    window.renderNUWOConnect(document.querySelector('.content-area'));
+    alert('Cambios guardados.');
+  };
 
   // ── Avatar color rotation ──
-  const avatarColors = ['#7A8B6F', '#C4956A', '#2C2C34', '#9BAF93'];
+  const avatarColors = [
+    '#7A8B6F', // Sage
+    '#C4956A', // Terracotta
+    '#7C9EB2', // Slate Blue
+    '#D4A5A9', // Dusty Rose
+    '#5E7C65', // Forest Green
+    '#A79BB7', // Muted Lavender
+    '#D9C39B', // Soft Ochre
+    '#8E8279', // Warm Taupe
+    '#2C2C34', // Deep Charcoal
+    '#9BAF93'  // Soft Sage
+  ];
   const sage = '#7A8B6F';
   const terracotta = '#C4956A';
   const lightSage = '#E8EDE5';
@@ -133,95 +248,44 @@ window.renderNUWOConnect = function (container) {
     const existing = document.querySelector('.profile-modal-overlay');
     if (existing) existing.remove();
 
-    const color = avatarColors[index % avatarColors.length];
+    const color = prof.color || avatarColors[index % avatarColors.length];
 
     const overlay = document.createElement('div');
     overlay.className = 'profile-modal-overlay';
     overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(6px); z-index:9999; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.2s ease;';
 
-    // ── Serialise slots → human-readable + agent string ──
-    function slotsToString(slots) {
-      if (!slots || !slots.length) return '';
-      return slots.map(s => `${s.days.join('/')} ${s.from}–${s.to}`).join(' | ');
-    }
+    window._selectedColor = color;
 
-    // ── Build initial slots state from prof ──
-    let _slots = JSON.parse(JSON.stringify(
-      prof.scheduleSlots && prof.scheduleSlots.length
-        ? prof.scheduleSlots
-        : [{ days: [], from: '09:00', to: '18:00' }]
-    ));
-
-    // ── Render the schedule picker into #schedule-picker-root ──
-    function renderSchedulePicker() {
-      const root = document.getElementById('schedule-picker-root');
+    function renderColorPicker() {
+      const root = document.getElementById('color-picker-root');
       if (!root) return;
-      const DAYS = ['LUN','MAR','MIE','JUE','VIE','SAB','DOM'];
-      root.innerHTML = _slots.map((slot, si) => `
-        <div class="sched-block" data-si="${si}" style="background:${lightSage}; border:1px solid ${sage}30; border-radius:10px; padding:14px 14px 10px; margin-bottom:10px; position:relative;">
-          ${ _slots.length > 1 ? `<button onclick="window._removeScheduleSlot(${si})" title="Eliminar bloque"
-            style="position:absolute;top:8px;right:10px;background:none;border:none;color:#ccc;font-size:1rem;cursor:pointer;line-height:1;" onmouseover="this.style.color='#c0392b'" onmouseout="this.style.color='#ccc'">✕</button>` : '' }
-          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:${sage};margin-bottom:8px;">Días</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-            ${DAYS.map(d => {
-              const active = slot.days.includes(d);
-              return `<button
-                onclick="window._toggleScheduleDay(${si},'${d}')"
+      root.innerHTML = `
+        <label>Color Identificador</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+          ${avatarColors.map(c => {
+            const isSelected = c.toLowerCase() === window._selectedColor.toLowerCase();
+            return `
+              <button onclick="window._selectProfColor('${c}')" type="button"
                 style="
-                  padding:5px 10px; border-radius:20px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.15s;
-                  background:${ active ? sage : 'rgba(0,0,0,0.05)' };
-                  color:${ active ? '#fff' : 'var(--color-text-muted)' };
-                  border:1.5px solid ${ active ? sage : 'transparent' };
-                ">${d}</button>`;
-            }).join('')}
-          </div>
-          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:${sage};margin-bottom:8px;">Horario</div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="flex:1;">
-              <div style="font-size:0.7rem;color:var(--color-text-muted);margin-bottom:3px;">Desde</div>
-              <input type="time" value="${slot.from}"
-                style="width:100%;padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:0.9rem;font-weight:600;background:#fff;outline:none;"
-                onchange="window._updateScheduleTime(${si},'from',this.value)">
-            </div>
-            <div style="padding-top:18px;color:var(--color-text-muted);font-size:1rem;">→</div>
-            <div style="flex:1;">
-              <div style="font-size:0.7rem;color:var(--color-text-muted);margin-bottom:3px;">Hasta</div>
-              <input type="time" value="${slot.to}"
-                style="width:100%;padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:6px;font-size:0.9rem;font-weight:600;background:#fff;outline:none;"
-                onchange="window._updateScheduleTime(${si},'to',this.value)">
-            </div>
-          </div>
+                  width:30px; height:30px; border-radius:50%; background:${c}; cursor:pointer; transition:all 0.15s; border:none; padding:0; display:flex; align-items:center; justify-content:center;
+                  box-shadow: ${isSelected ? '0 0 0 2px var(--bg-card), 0 0 0 4px ' + c : '0 2px 4px rgba(0,0,0,0.1)'};
+                  transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
+                ">
+                ${isSelected ? '<span style="color:#fff;font-weight:bold;font-size:0.8rem;">✓</span>' : ''}
+              </button>
+            `;
+          }).join('')}
         </div>
-      `).join('');
-
-      // Live preview
-      const preview = document.getElementById('schedule-preview');
-      if (preview) {
-        const str = slotsToString(_slots);
-        preview.textContent = str || '—';
-      }
+      `;
     }
 
-    window._toggleScheduleDay = function(si, day) {
-      const idx = _slots[si].days.indexOf(day);
-      if (idx === -1) _slots[si].days.push(day);
-      else _slots[si].days.splice(idx, 1);
-      // keep canonical order
-      const order = ['LUN','MAR','MIE','JUE','VIE','SAB','DOM'];
-      _slots[si].days.sort((a,b) => order.indexOf(a) - order.indexOf(b));
-      renderSchedulePicker();
-    };
-    window._updateScheduleTime = function(si, field, val) {
-      _slots[si][field] = val;
-      renderSchedulePicker();
-    };
-    window._removeScheduleSlot = function(si) {
-      _slots.splice(si, 1);
-      renderSchedulePicker();
-    };
-    window._addScheduleSlot = function() {
-      _slots.push({ days: [], from: '09:00', to: '18:00' });
-      renderSchedulePicker();
+    window._selectProfColor = function(c) {
+      window._selectedColor = c;
+      renderColorPicker();
+      const preview = document.getElementById('modal-avatar-preview');
+      if (preview) {
+        preview.style.background = c;
+      }
     };
 
     overlay.innerHTML = `
@@ -250,7 +314,7 @@ window.renderNUWOConnect = function (container) {
 
         <!-- Header con avatar -->
         <div style="padding: 28px 28px 0; display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
-          <div style="width: 56px; height: 56px; background: ${color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; color: #fff; flex-shrink: 0;">
+          <div id="modal-avatar-preview" style="width: 56px; height: 56px; background: ${color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; color: #fff; flex-shrink: 0; transition: background 0.2s;">
             ${getInitial(prof.name)}
           </div>
           <div style="flex: 1;">
@@ -259,24 +323,8 @@ window.renderNUWOConnect = function (container) {
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 700; background: ${prof.activo ? '#E8F5E9' : '#FFF3E0'}; color: ${prof.activo ? '#2E7D32' : '#E68A00'};">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: ${prof.activo ? '#2E7D32' : '#E68A00'};"></span>
-              ${prof.activo ? 'Activo' : 'Inactivo'}
-            </span>
-            <button onclick="this.closest('.profile-modal-overlay').remove()" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.06); color: var(--color-text-muted); font-size: 1.1rem; display: flex; align-items: center; justify-content: center;">✕</button>
-          </div>
-        </div>
-
-        <!-- Formulario -->
+               <!-- Formulario -->
         <div style="padding: 0 28px 8px;">
-
-          <!-- Descripción del servicio (campo principal para el agente) -->
-          <div class="field-group" style="background: ${lightSage}; border-radius: var(--radius-md); padding: 16px; border: 1px solid ${sage}30;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <label style="margin: 0; color: ${sage}; font-weight: 800;">Descripción del servicio para el Agente IA</label>
-            </div>
-            <textarea id="prof-descripcion">${prof.descripcion}</textarea>
-            <p class="desc-hint">Este texto es lo que el bot de WhatsApp usa para presentar al profesional ante los pacientes. Sé descriptivo/a, cálido/a y mencioná el enfoque único.</p>
-          </div>
 
           <!-- Datos de contacto -->
           <div class="field-row">
@@ -317,25 +365,72 @@ window.renderNUWOConnect = function (container) {
             </div>
           </div>
 
-          <!-- Horarios: selector visual -->
-          <div class="field-group" style="border:1px solid rgba(0,0,0,0.08); border-radius:var(--radius-md); padding:16px; background:var(--bg-card-alt);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <label style="margin:0;">Horarios de atención</label>
-              <button onclick="window._addScheduleSlot()"
-                style="padding:4px 12px; font-size:0.78rem; font-weight:700; border-radius:20px;
-                       background:${sage}18; color:${sage}; border:1.5px solid ${sage}40; cursor:pointer;"
-                onmouseover="this.style.background='${sage}30'" onmouseout="this.style.background='${sage}18'">
-                + Agregar bloque
+          <!-- Color selector -->
+          <div class="field-group" id="color-picker-root"></div>
+
+          <!-- Services Offered -->
+          <div class="field-group" style="border-top: 1px solid rgba(0,0,0,0.06); padding-top: 14px; margin-bottom: 14px; text-align: left;">
+            <label style="font-weight:700; color:var(--color-text-primary); margin-bottom: 8px;">Servicios Ofrecidos</label>
+            <div id="services-container" style="display:flex; flex-direction:column; gap:8px;">
+              ${getDefaultServices(prof).map(service => `
+                <div class="prof-service-row" style="background:var(--bg-card-alt); border:1px solid rgba(0,0,0,0.08); border-radius:var(--radius-sm); padding:16px; margin-bottom:12px; position:relative; text-align:left; box-sizing:border-box;">
+                  <div style="position:absolute; right:12px; top:12px;">
+                    <button type="button" onclick="this.closest('.prof-service-row').remove()" 
+                      style="background:none; border:none; color:#C4956A; cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s;"
+                      onmouseover="this.style.background='rgba(196,149,106,0.1)'"
+                      onmouseout="this.style.background='none'"
+                      title="Eliminar servicio">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4956A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
+                    </button>
+                  </div>
+                  <div style="display:grid; grid-template-columns: 2fr 1fr; gap:14px; margin-bottom:10px; padding-right:40px;">
+                    <div>
+                      <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted); margin-bottom:4px;">Título del Servicio</label>
+                      <input type="text" class="service-name" placeholder="Ej: Consulta Inicial" value="${service.name}" 
+                        style="width:100%; padding:9px 12px; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); font-family:var(--font-main); font-size:0.85rem; color:var(--color-text-primary); background:var(--bg-card); outline:none; box-sizing:border-box;">
+                    </div>
+                    <div>
+                      <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted); margin-bottom:4px;">Precio ($)</label>
+                      <div style="position:relative; width:100%;">
+                        <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:0.85rem; color:var(--color-text-secondary); font-weight:600;">$</span>
+                        <input type="number" class="service-price" placeholder="Valor" value="${service.price}" 
+                          style="width:100%; padding:9px 12px 9px 22px; font-size:0.85rem; text-align:right; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); font-family:var(--font-main); color:var(--color-text-primary); background:var(--bg-card); outline:none; box-sizing:border-box;">
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted); margin-bottom:4px;">Descripción del Servicio</label>
+                    <textarea class="service-description" placeholder="Explicá de qué trata el servicio..." 
+                      style="width:100%; padding:9px 12px; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); font-family:var(--font-main); font-size:0.85rem; color:var(--color-text-primary); background:var(--bg-card); outline:none; box-sizing:border-box; min-height:50px; resize:vertical; line-height:1.5;">${service.description || ''}</textarea>
+                  </div>
+                  <input type="hidden" class="service-duration" value="${service.duration || 60}">
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" onclick="window._addServiceRow('services-container')" style="width:100%; padding:10px 12px; font-size:0.85rem; background:rgba(122, 139, 111, 0.1); color:#7A8B6F; border:1px dashed #7A8B6F; border-radius:var(--radius-sm); cursor:pointer; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+              ＋ Agregar Servicio
+            </button>
+          </div>
+
+          <div class="field-group">
+            <label>Estado</label>
+            <div style="display:flex; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); overflow:hidden; background:var(--bg-card-alt);">
+              <button type="button" id="status-btn-active" onclick="window._setProfStatus(true)" style="flex:1; padding:9px; border:none; font-size:0.88rem; font-weight:700; cursor:pointer; transition:all 0.2s; background:${prof.activo ? '#7A8B6F' : 'transparent'}; color:${prof.activo ? '#fff' : 'var(--color-text-secondary)'};">
+                Activo — El bot lo ofrece
+              </button>
+              <button type="button" id="status-btn-inactive" onclick="window._setProfStatus(false)" style="flex:1; padding:9px; border:none; font-size:0.88rem; font-weight:700; cursor:pointer; transition:all 0.2s; background:${!prof.activo ? '#C4956A' : 'transparent'}; color:${!prof.activo ? '#fff' : 'var(--color-text-secondary)'};">
+                Inactivo — Oculto del bot
               </button>
             </div>
-
-            <div id="schedule-picker-root"></div>
-
-            <!-- Preview para el agente -->
-            <div style="margin-top:10px; padding:10px 12px; background:${sage}12; border-radius:8px; border:1px dashed ${sage}40;">
-              <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:${sage}; margin-bottom:4px;">Vista del agente IA</div>
-              <div id="schedule-preview" style="font-size:0.82rem; font-weight:600; color:var(--color-text-primary); font-family:monospace;"></div>
-            </div>
+            <input type="hidden" id="prof-status" value="${prof.activo ? 'true' : 'false'}">
+          </div>; cursor:pointer; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+              ＋ Agregar Servicio
+            </button>
           </div>
 
           <div class="field-group">
@@ -359,26 +454,7 @@ window.renderNUWOConnect = function (container) {
               Desactivar
             </button>
             <button class="button-primary" style="padding: 9px 24px; font-size: 0.85rem;"
-              onclick="
-                const newSlots = JSON.parse(JSON.stringify(window._currentModalSlots || []));
-                const schedStr = newSlots.map(s => s.days.join('/') + ' ' + s.from + '–' + s.to).join(' | ');
-                window._profData[${index}] = {
-                  ...window._profData[${index}],
-                  name: document.getElementById('prof-name').value,
-                  specialty: document.getElementById('prof-specialty').value,
-                  tel: document.getElementById('prof-tel').value,
-                  email: document.getElementById('prof-email').value,
-                  ig: document.getElementById('prof-ig').value,
-                  room: document.getElementById('prof-room').value,
-                  schedule: schedStr,
-                  scheduleSlots: newSlots,
-                  activo: document.getElementById('prof-status').value === 'true',
-                  descripcion: document.getElementById('prof-descripcion').value
-                };
-                this.closest('.profile-modal-overlay').remove();
-                window.renderNUWOConnect(document.querySelector('.content-area'));
-                alert('Cambios guardados. El agente IA de WhatsApp utilizará los horarios actualizados.');
-              ">
+              onclick="window._saveProfile(${index})">
               Guardar cambios
             </button>
           </div>
@@ -392,7 +468,21 @@ window.renderNUWOConnect = function (container) {
     });
 
     document.body.appendChild(overlay);
+    renderColorPicker();
   }
+
+  window._setNewProfStatus = function(isActive) {
+    const activeBtn = document.getElementById('new-status-btn-active');
+    const inactiveBtn = document.getElementById('new-status-btn-inactive');
+    const input = document.getElementById('newprof-status');
+    if (!activeBtn || !inactiveBtn || !input) return;
+    
+    input.value = isActive ? 'true' : 'false';
+    activeBtn.style.background = isActive ? '#7A8B6F' : 'transparent';
+    activeBtn.style.color = isActive ? '#fff' : 'var(--color-text-secondary)';
+    inactiveBtn.style.background = !isActive ? '#C4956A' : 'transparent';
+    inactiveBtn.style.color = !isActive ? '#fff' : 'var(--color-text-secondary)';
+  };
 
   // Make openProfileModal available globally for onclick handlers
   window._openProfileModal = openProfileModal;
@@ -407,6 +497,36 @@ window.renderNUWOConnect = function (container) {
     const overlay = document.createElement('div');
     overlay.className = 'new-prof-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;';
+
+    window._selectedColorNew = avatarColors[0];
+
+    window._selectNewProfColor = function(c) {
+      window._selectedColorNew = c;
+      window._renderNewColorPicker();
+    };
+
+    window._renderNewColorPicker = function() {
+      const root = document.getElementById('new-color-picker-root');
+      if (!root) return;
+      root.innerHTML = `
+        <label>Color Identificador</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+          ${avatarColors.map(c => {
+            const isSelected = c.toLowerCase() === window._selectedColorNew.toLowerCase();
+            return `
+              <button onclick="window._selectNewProfColor('${c}')" type="button"
+                style="
+                  width:30px; height:30px; border-radius:50%; background:${c}; cursor:pointer; transition:all 0.15s; border:none; padding:0; display:flex; align-items:center; justify-content:center;
+                  box-shadow: ${isSelected ? '0 0 0 2px var(--bg-card), 0 0 0 4px ' + c : '0 2px 4px rgba(0,0,0,0.1)'};
+                  transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
+                ">
+                ${isSelected ? '<span style="color:#fff;font-weight:bold;font-size:0.8rem;">✓</span>' : ''}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      `;
+    };
 
     overlay.innerHTML = `
       <style>
@@ -434,30 +554,72 @@ window.renderNUWOConnect = function (container) {
               <input type="text" id="newprof-name" placeholder="Ej: Lic. Ana López">
             </div>
             <div>
-              <label>Especialidad</label>
-              <input type="text" id="newprof-specialty" placeholder="Ej: Psicología Clínica">
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div>
-              <label>Teléfono</label>
-              <input type="tel" id="newprof-tel" placeholder="+54 911 ____-____">
-            </div>
-            <div>
-              <label>Email</label>
-              <input type="email" id="newprof-email" placeholder="nombre@email.com">
-            </div>
-          </div>
-
-          <div>
-            <label>Descripción del servicio</label>
-            <textarea id="newprof-desc" placeholder="Describí brevemente el enfoque y servicios que ofrece este profesional. El Asistente IA usará este texto para presentarlo a los pacientes."></textarea>
-          </div>
-
-          <div>
+              <label>Especialida          <div>
             <label>Instagram</label>
             <input type="text" id="newprof-ig" placeholder="@usuario">
+          </div>
+
+          <!-- Color Selector Container -->
+          <div class="field-group" id="new-color-picker-root"></div>
+
+          <div class="field-group">
+            <label>Estado</label>
+            <div style="display:flex; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); overflow:hidden; background:var(--bg-card-alt);">
+              <button type="button" id="new-status-btn-active" onclick="window._setNewProfStatus(true)" style="flex:1; padding:9px; border:none; font-size:0.88rem; font-weight:700; cursor:pointer; transition:all 0.2s; background:#7A8B6F; color:#fff;">
+                Activo — El bot lo ofrece
+              </button>
+              <button type="button" id="new-status-btn-inactive" onclick="window._setNewProfStatus(false)" style="flex:1; padding:9px; border:none; font-size:0.88rem; font-weight:700; cursor:pointer; transition:all 0.2s; background:transparent; color:var(--color-text-secondary);">
+                Inactivo — Oculto del bot
+              </button>
+            </div>
+            <input type="hidden" id="newprof-status" value="true">
+          </div>
+
+          <!-- Services Section for New Prof -->
+          <div class="field-group" style="border-top:1px solid rgba(0,0,0,0.06); padding-top:14px; margin-bottom:14px; text-align: left;">
+            <label style="font-weight:700; color:var(--color-text-primary); margin-bottom: 8px;">Servicios Ofrecidos</label>
+            <div id="new-services-container" style="display:flex; flex-direction:column; gap:8px;">
+              <div class="newprof-service-row" style="background:var(--bg-card-alt); border:1px solid rgba(0,0,0,0.08); border-radius:var(--radius-sm); padding:16px; margin-bottom:12px; position:relative; text-align:left; box-sizing:border-box;">
+                <div style="position:absolute; right:12px; top:12px;">
+                  <button type="button" onclick="this.closest('.newprof-service-row').remove()" 
+                    style="background:none; border:none; color:#C4956A; cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s;"
+                    onmouseover="this.style.background='rgba(196,149,106,0.1)'"
+                    onmouseout="this.style.background='none'"
+                    title="Eliminar servicio">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4956A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                  </button>
+                </div>
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:14px; margin-bottom:10px; padding-right:40px;">
+                  <div>
+                    <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted); margin-bottom:4px;">Título del Servicio</label>
+                    <input type="text" class="service-name" placeholder="Ej: Consulta Inicial" value="Consulta Inicial" 
+                      style="width:100%; padding:9px 12px; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); font-family:var(--font-main); font-size:0.85rem; color:var(--color-text-primary); background:var(--bg-card); outline:none; box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted); margin-bottom:4px;">Precio ($)</label>
+                    <div style="position:relative; width:100%;">
+                      <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:0.85rem; color:var(--color-text-secondary); font-weight:600;">$</span>
+                      <input type="number" class="service-price" placeholder="Valor" value="3000" 
+                        style="width:100%; padding:9px 12px 9px 22px; font-size:0.85rem; text-align:right; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); font-family:var(--font-main); color:var(--color-text-primary); background:var(--bg-card); outline:none; box-sizing:border-box;">
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted); margin-bottom:4px;">Descripción del Servicio</label>
+                  <textarea class="service-description" placeholder="Explicá de qué trata el servicio..." 
+                    style="width:100%; padding:9px 12px; border:1px solid rgba(0,0,0,0.12); border-radius:var(--radius-sm); font-family:var(--font-main); font-size:0.85rem; color:var(--color-text-primary); background:var(--bg-card); outline:none; box-sizing:border-box; min-height:50px; resize:vertical; line-height:1.5;"></textarea>
+                </div>
+                <input type="hidden" class="service-duration" value="60">
+              </div>
+            </div>
+            <button type="button" onclick="window._addServiceRow('new-services-container')" style="width:100%; padding:10px 12px; font-size:0.85rem; background:rgba(122, 139, 111, 0.1); color:#7A8B6F; border:1px dashed #7A8B6F; border-radius:var(--radius-sm); cursor:pointer; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
+              ＋ Agregar Servicio
+            </button>
           </div>
 
         </div>
@@ -470,6 +632,7 @@ window.renderNUWOConnect = function (container) {
     `;
 
     document.body.appendChild(overlay);
+    window._renderNewColorPicker();
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   };
 
@@ -478,23 +641,37 @@ window.renderNUWOConnect = function (container) {
     const specialty = document.getElementById('newprof-specialty')?.value?.trim();
     const tel = document.getElementById('newprof-tel')?.value?.trim() || '';
     const email = document.getElementById('newprof-email')?.value?.trim() || '';
-    const desc = document.getElementById('newprof-desc')?.value?.trim() || '';
     const ig = document.getElementById('newprof-ig')?.value?.trim() || '';
+    const status = document.getElementById('newprof-status')?.value === 'true';
 
     if (!name) { alert('Ingresá el nombre del profesional'); return; }
     if (!specialty) { alert('Ingresá la especialidad'); return; }
+
+    const services = [];
+    const rows = document.querySelectorAll('.newprof-service-row');
+    rows.forEach(row => {
+      const sName = row.querySelector('.service-name').value.trim();
+      const sPrice = parseFloat(row.querySelector('.service-price').value) || 0;
+      const sDuration = parseInt(row.querySelector('.service-duration').value) || 60;
+      const sDesc = row.querySelector('.service-description')?.value?.trim() || '';
+      if (sName) {
+        services.push({ name: sName, price: sPrice, duration: sDuration, description: sDesc });
+      }
+    });
 
     const newProf = {
       name,
       specialty,
       schedule: 'Asignar en Actividad',
       scheduleSlots: [],
-      room: '',
+      room: 'Consultorio A',
       ig,
       tel,
       email,
-      activo: true,
-      descripcion: desc || 'Profesional del equipo de Espacio Alvarado.'
+      activo: status,
+      color: window._selectedColorNew || avatarColors[0],
+      descripcion: '',
+      services: services
     };
 
     window._profData.push(newProf);
@@ -507,10 +684,11 @@ window.renderNUWOConnect = function (container) {
     }
   };
 
-  // ── Helper: render active professional card ──
   function renderProfCard(prof, index) {
-    const color = avatarColors[index % avatarColors.length];
-    const descPreview = prof.descripcion.length > 60 ? prof.descripcion.substring(0, 60) + '...' : prof.descripcion;
+    const color = prof.color || avatarColors[index % avatarColors.length];
+    const firstService = (prof.services && prof.services[0]) || getDefaultServices(prof)[0];
+    const desc = prof.descripcion || (firstService && firstService.description) || '';
+    const descPreview = desc.length > 60 ? desc.substring(0, 60) + '...' : desc;
 
     return `
       <div class="card profile-card" style="text-align: center;">
@@ -597,15 +775,63 @@ window.renderNUWOConnect = function (container) {
     `;
   }
 
+  if (!window._activeProfsTab) {
+    window._activeProfsTab = 'active';
+  }
+
+  window._setProfsTab = function(tabId) {
+    window._activeProfsTab = tabId;
+    const contentArea = document.querySelector('.content-area');
+    if (contentArea && window.renderNUWOConnect) {
+      window.renderNUWOConnect(contentArea);
+    }
+  };
+
+  const activeProfsCount = professionals.filter(p => p.activo !== false).length;
+  const applicantsCount = applicants.length;
+
+  const tabsHtml = `
+    <div style="display:flex;gap:6px;margin-bottom:24px;border-bottom:1px solid rgba(0,0,0,0.08);padding-bottom:12px;">
+      <button onclick="window._setProfsTab('active')" style="padding:8px 16px;border-radius:var(--radius-pill);border:none;font-weight:700;font-size:0.75rem;cursor:pointer;transition:all 0.2s;
+        ${window._activeProfsTab === 'active' ? `background:${sage};color:#fff;` : 'background:rgba(0,0,0,0.04);color:var(--color-text-secondary);'}">
+        Equipo Activo (${activeProfsCount})
+      </button>
+      <button onclick="window._setProfsTab('applicants')" style="padding:8px 16px;border-radius:var(--radius-pill);border:none;font-weight:700;font-size:0.75rem;cursor:pointer;transition:all 0.2s;position:relative;
+        ${window._activeProfsTab === 'applicants' ? `background:${sage};color:#fff;` : 'background:rgba(0,0,0,0.04);color:var(--color-text-secondary);'}">
+        Nuevos Consultantes (${applicantsCount})
+        ${applicantsCount > 0 ? `<span style="position:absolute;top:-2px;right:-2px;width:6px;height:6px;border-radius:50%;background:#C0392B;"></span>` : ''}
+      </button>
+    </div>
+  `;
+
+  let tabContent = '';
+  if (window._activeProfsTab === 'active') {
+    tabContent = `
+      <div style="margin-bottom: 16px;">
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+          ${professionals.map((p, i) => renderProfCard(p, i)).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    tabContent = `
+      <div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          ${applicants.map(a => renderApplicantCard(a)).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   // ══════════════════════════════════════════
   // Render full view
   // ══════════════════════════════════════════
   container.innerHTML = `
     <!-- ── Header ────────────────────────── -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
       <div class="dashboard-header" style="margin-bottom:0;">
         <h1>Profesionales</h1>
-        <p class="dashboard-subtitle">EQUIPO ESPACIO ALVARADO · ${professionals.filter(p=>p.activo!==false).length} ACTIVOS</p>
+        <p class="dashboard-subtitle">EQUIPO ESPACIO ALVARADO · ${activeProfsCount} ACTIVOS</p>
       </div>
       <button class="button-primary" onclick="window._openNewProfModal()" style="display:flex;align-items:center;gap:8px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -616,34 +842,10 @@ window.renderNUWOConnect = function (container) {
       </button>
     </div>
 
-    <!-- ── Section A: Equipo activo ─────── -->
-    <div style="margin-bottom: 16px;">
-      <h3 style="margin-bottom: 16px;">Equipo activo</h3>
-      <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
-        ${professionals.map((p, i) => renderProfCard(p, i)).join('')}
-      </div>
-      <p style="margin-top: 18px; text-align: center;">
-        <a href="#" style="color: ${sage}; font-size: 0.88rem; font-weight: 600; text-decoration: none;"
-           onclick="event.preventDefault(); alert('Mostrando todos los profesionales')">
-          Ver todos los profesionales (17) →
-        </a>
-      </p>
-    </div>
+    <!-- Tabs Navigation -->
+    ${tabsHtml}
 
-    <!-- ── Divider ───────────────────────── -->
-    <hr style="border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 32px 0;">
-
-    <!-- ── Section B: Nuevos interesados ── -->
-    <div>
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-        <h3 style="margin: 0;">Nuevos interesados</h3>
-        <span style="display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; background: #FDECEA; color: #C0392B; border: 1px solid rgba(192,57,43,0.2);">
-          3 sin revisar
-        </span>
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        ${applicants.map(a => renderApplicantCard(a)).join('')}
-      </div>
-    </div>
+    <!-- Tab Content -->
+    ${tabContent}
   `;
 };

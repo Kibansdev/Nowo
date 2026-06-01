@@ -15,6 +15,7 @@ const fallbackProfData = [
     tel: '+54 911 4444-1001',
     email: 'daniel.rodriguez@gmail.com',
     activo: true,
+    color: '#7A8B6F',
     descripcion: 'Psicología integral con enfoque holístico. Combina técnicas de psicoterapia con meditación guiada y cuencos tibetanos. Ideal para quienes buscan un abordaje que contemple mente, cuerpo y espíritu. Especialista en ansiedad, estrés y autoconocimiento.'
   },
   {
@@ -27,6 +28,7 @@ const fallbackProfData = [
     tel: '+54 911 4444-1002',
     email: 'maria.garcia@gmail.com',
     activo: true,
+    color: '#C4956A',
     descripcion: 'Psicología sistémica con foco en vínculos y dinámicas familiares. Trabaja con adultos, parejas y familias. Su enfoque busca entender los patrones relacionales para generar cambios profundos y duraderos.'
   },
   {
@@ -39,6 +41,7 @@ const fallbackProfData = [
     tel: '+54 911 4444-1003',
     email: 'marina.fossati@gmail.com',
     activo: true,
+    color: '#7C9EB2',
     descripcion: 'Nutrición con enfoque integrativo que considera la alimentación como herramienta de bienestar integral. Planes personalizados, sin dietas restrictivas. Especialista en alimentación consciente, celiaquía y desórdenes alimentarios.'
   },
   {
@@ -51,6 +54,7 @@ const fallbackProfData = [
     tel: '+54 911 4444-1004',
     email: 'camila.torres@gmail.com',
     activo: true,
+    color: '#D4A5A9',
     descripcion: 'Terapia Gestalt orientada al aquí y ahora. Trabaja con la conciencia corporal y emocional para facilitar procesos de cambio. Ideal para quienes buscan conectar con sus emociones y vivir de forma más auténtica.'
   },
   {
@@ -63,7 +67,8 @@ const fallbackProfData = [
     tel: '+54 911 4444-1005',
     email: 'lucas.mendez@gmail.com',
     activo: true,
-    descripcion: 'Yoga terapéutico adaptado a cada persona. Clases individuales y grupales que combinan posturas, respiración y meditación. Especialmente indicado para dolor crónico, recuperación postural y manejo del estrés.'
+    color: '#5E7C65',
+    descripcion: 'Yoga terapéutico adaptado a cada persona. Clases individuales y grupales que combinan posturas, respiración and meditación. Especialmente indicado para dolor crónico, recuperación postural y manejo del estrés.'
   },
   {
     name: 'Dra. Valentina Ruiz',
@@ -75,6 +80,7 @@ const fallbackProfData = [
     tel: '+54 911 4444-1006',
     email: 'valentina.ruiz@gmail.com',
     activo: true,
+    color: '#A79BB7',
     descripcion: 'Sesiones de Reiki y sanación energética para restablecer el equilibrio del cuerpo y la mente. Trabaja con imposición de manos, cristales y aromaterapia. Ideal como complemento a tratamientos psicológicos o médicos.'
   },
   {
@@ -87,6 +93,7 @@ const fallbackProfData = [
     tel: '+54 911 4444-1007',
     email: 'sofia.peralta@gmail.com',
     activo: true,
+    color: '#D9C39B',
     descripcion: 'Coaching ontológico para transformar tu manera de observar la vida. Sesiones individuales enfocadas en liderazgo personal, transiciones de carrera y desarrollo de habilidades conversacionales.'
   },
   {
@@ -99,6 +106,7 @@ const fallbackProfData = [
     tel: '+54 911 4444-1008',
     email: 'marcos.delgado@gmail.com',
     activo: true,
+    color: '#8E8279',
     descripcion: 'Osteopatía estructural y visceral. Tratamiento manual para dolores musculares, contracturas, cefaleas y problemas posturales. Enfoque integral que busca la causa del dolor, no solo el síntoma.'
   }
 ];
@@ -115,6 +123,16 @@ if (!window._profData) {
 }
 if (!window._workshopsData) {
   window._workshopsData = fallbackWorkshopsData;
+}
+if (!window._roomsData) {
+  window._roomsData = [
+    { name: 'Consultorio A', idx: 0, pct: 78, hours: 62, price: 3000 },
+    { name: 'Consultorio B', idx: 1, pct: 62, hours: 50, price: 2500 },
+    { name: 'Consultorio C', idx: 2, pct: 89, hours: 71, price: 3500 },
+    { name: 'Consultorio D', idx: 3, pct: 45, hours: 36, price: 2000 },
+    { name: 'Hall',          idx: 4, pct: 30, hours: 24, price: 1500 },
+    { name: 'Espacio Coworking', idx: 5, pct: 40, hours: 32, price: 1200 }
+  ];
 }
 if (!window._agendaCustomSlots) {
   window._agendaCustomSlots = {};

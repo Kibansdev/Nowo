@@ -13,15 +13,16 @@ Implementar una plataforma web privada y a medida que centralice la gestión dia
 
 ## Módulos y Funcionalidades Concretas
 
-### 1. Panel de Consultorios (Grilla Interactiva)
+### 1. Panel de Consultorios (Grilla Interactiva y Solapas)
 
-Es el organizador visual de las salas físicas del local (Consultorios A, B, C, D y Hall).
+Es el organizador visual de las salas físicas del local (Consultorio A, B, C, D, Hall y Espacio Coworking).
 
-* **Visualización de la semana:** Permite ver la agenda completa de lunes a sábado, dividida por horas. Cada consultorio tiene su propia grilla independiente.
+* **Organización en Solapas (Tabs):** Incluye una barra superior para navegar fácilmente entre los espacios (Ver Todos, Consultorio A, B, C, D, Hall, Espacio Coworking). Esto elimina la necesidad de desplazarse verticalmente por la página y optimiza el área de trabajo en pantallas de cualquier tamaño.
+* **Visualización de la semana:** Permite ver la agenda completa de lunes a sábado, dividida por horas. Cada espacio tiene su propia grilla semanal independiente.
 * **Control visual rápido (Drag and Drop):** Permite asignar profesionales o talleres a cualquier hora simplemente arrastrándolos desde el panel lateral y soltándolos en la grilla.
 * **Reorganización en segundos:** Si un profesional necesita cambiar de día u hora, el bloque asignado se arrastra a la nueva celda horaria.
 * **Liberación de salas:** Las celdas ocupadas se liberan arrastrando el bloque al tacho de basura visual en la parte superior.
-* **Control de uso:** Cada consultorio muestra qué porcentaje de la semana está ocupado, ayudando a identificar salas libres para optimizar el alquiler.
+* **Simulador de ingresos y tarifas:** Cada consultorio muestra en tiempo real su precio por hora base (editable en la misma tarjeta), las horas ocupadas, el ingreso semanal generado y el potencial máximo si estuviera al 100% de ocupación.
 * **Navegación:** Botones simples para avanzar o retroceder semanas completas.
 
 ---

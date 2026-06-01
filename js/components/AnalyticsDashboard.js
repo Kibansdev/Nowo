@@ -142,70 +142,7 @@ window.renderAnalytics = function (container) {
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════ -->
-    <!-- SECCIÓN 2: CONSULTORIOS             -->
-    <!-- ═══════════════════════════════════ -->
-    <div class="card" style="margin-bottom:24px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-        <h3 style="margin:0;">Consultorios — Precio, Horas e Ingreso</h3>
-        <span style="font-size:0.78rem; color:var(--color-text-muted); background:var(--bg-card-alt); padding:5px 12px; border-radius:20px;">
-          Editá precio/hora o horas contratadas directamente
-        </span>
-      </div>
 
-      <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse;" id="rooms-table">
-          <thead>
-            <tr style="background:var(--bg-card-alt);">
-              <th style="padding:10px 14px; text-align:left; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--color-text-muted); border-bottom:2px solid rgba(0,0,0,0.07);">Consultorio</th>
-              <th style="padding:10px 14px; text-align:center; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--color-text-muted); border-bottom:2px solid rgba(0,0,0,0.07);">Ocupación</th>
-              <th style="padding:10px 14px; text-align:right; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:${sage}; border-bottom:2px solid ${sage}40;">Horas / Mes</th>
-              <th style="padding:10px 14px; text-align:right; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:${sage}; border-bottom:2px solid ${sage}40;">Precio / Hora</th>
-              <th style="padding:10px 14px; text-align:right; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:${terracotta}; border-bottom:2px solid ${terracotta}40;">Ingreso del Mes</th>
-            </tr>
-          </thead>
-          <tbody id="rooms-tbody">
-            ${rooms.map((r, i) => `
-              <tr style="border-bottom:1px solid rgba(0,0,0,0.05);">
-                <td style="padding:12px 14px; font-weight:600; font-size:0.88rem; color:var(--color-text-primary);">${r.name}</td>
-                <td style="padding:12px 14px; text-align:center;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <div style="flex:1; height:8px; background:#eee; border-radius:4px; overflow:hidden;">
-                      <div style="width:${r.pct}%; height:100%; background:${r.pct > 80 ? terracotta : sage}; border-radius:4px;"></div>
-                    </div>
-                    <span style="font-size:0.82rem; font-weight:600; min-width:36px;">${r.pct}%</span>
-                  </div>
-                </td>
-                <td style="padding:12px 14px; text-align:right;">
-                  <input id="room-hours-${i}" type="number" value="${r.hours}"
-                    style="width:65px; padding:5px 8px; border:1px solid rgba(0,0,0,0.10); border-radius:4px; font-size:0.9rem; font-weight:600; text-align:right; background:var(--bg-card-alt); outline:none;"
-                    onchange="window._updateRoomField(${i}, 'hours', this.value)">
-                </td>
-                <td style="padding:12px 14px; text-align:right;">
-                  <div style="display:inline-flex; align-items:center; gap:4px;">
-                    <span style="font-size:0.82rem; color:var(--color-text-muted);">$</span>
-                    <input id="room-price-${i}" type="number" value="${r.price}"
-                      style="width:75px; padding:5px 8px; border:1px solid rgba(0,0,0,0.10); border-radius:4px; font-size:0.9rem; font-weight:600; text-align:right; background:var(--bg-card-alt); outline:none;"
-                      onchange="window._updateRoomField(${i}, 'price', this.value)">
-                  </div>
-                </td>
-                <td style="padding:12px 14px; text-align:right; font-size:1rem; font-weight:700; color:${terracotta};" id="room-revenue-${i}">
-                  $${(r.hours * r.price).toLocaleString('es-AR')}
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-          <tfoot>
-            <tr style="background:var(--bg-card-alt);">
-              <td style="padding:12px 14px; font-weight:700; font-size:0.88rem; color:var(--color-text-primary);" colspan="2">TOTAL</td>
-              <td style="padding:12px 14px; text-align:right; font-weight:700; color:var(--color-text-primary);" id="total-hours">${totalHoursUsed} hrs</td>
-              <td></td>
-              <td style="padding:12px 14px; text-align:right; font-weight:700; font-size:1.05rem; color:${terracotta};" id="total-room-revenue">$${totalRoomRevenue.toLocaleString('es-AR')}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
 
     <!-- ═══════════════════════════════════ -->
     <!-- SECCIÓN 3: TALLERES                 -->

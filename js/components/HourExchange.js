@@ -1,39 +1,97 @@
-// ══════════════════════════════════════════════════════════
-// Inicio — Agenda del Día + Talleres Activos
-// Espacio Alvarado · 4 consultorios + Hall · Vista diaria
-// ══════════════════════════════════════════════════════════
+// ============================================
+// Inicio - Agenda del Dia + Talleres Activos
+// Espacio Alvarado - 4 consultorios + Hall - Vista diaria
+// ============================================
 
 window.renderMarket = function (container) {
   console.log('[INICIO] renderMarket called', container);
 
-  // ── Color palette ──
+  // -- Color palette --
   const sage        = '#7A8B6F';
   const terracotta  = '#C4956A';
   const lightSage   = '#E8EDE5';
   const lightTerracotta = '#F5EDE5';
 
-  // ── Workshops data (Stateful) ──
+  function getProfColor(name) {
+    if (!name || name === '\u2014' || name === 'Cerrado' || name === 'Espacio cerrado' || name === 'Sin turnos') {
+      return null;
+    }
+    
+    var cleanLower = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    function getWords(str) {
+      var titlesAndCommon = ['lic', 'dr', 'dra', 'prof', 'taller', 'yoga', 'terapeutico', 'meditacion', 'cuencos', 'de', 'y', 'con', 'para'];
+      return str.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s]/g, '')
+        .split(/\s+/)
+        .filter(function(w) { return w.length > 2 && !titlesAndCommon.includes(w); });
+    }
+
+    var nameWords = getWords(name);
+    var profs = window._profData || [];
+    if (nameWords.length > 0) {
+      for (var i = 0; i < profs.length; i++) {
+        var pWords = getWords(profs[i].name);
+        var hasOverlap = nameWords.some(function(w) { return pWords.includes(w); });
+        if (hasOverlap) {
+          return profs[i].color || null;
+        }
+      }
+    }
+
+    for (var i = 0; i < profs.length; i++) {
+      var pNameLower = profs[i].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      var pNameNoTitle = pNameLower.replace(/^(lic\.|dr\.|dra\.|prof\.)\s*/, '');
+      var nameNoTitle = cleanLower.replace(/^(lic\.|dr\.|dra\.|prof\.)\s*/, '');
+      if (pNameNoTitle.includes(nameNoTitle) || nameNoTitle.includes(pNameNoTitle)) {
+        return profs[i].color || null;
+      }
+    }
+
+    var workshops = window._workshopsData || [];
+    for (var i = 0; i < workshops.length; i++) {
+      var wNameLower = workshops[i].name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      if (cleanLower.includes(wNameLower) || wNameLower.includes(cleanLower)) {
+        return workshops[i].color || null;
+      }
+    }
+
+    if (nameWords.length > 0) {
+      for (var i = 0; i < workshops.length; i++) {
+        var wWords = getWords(workshops[i].name);
+        var hasOverlap = nameWords.some(function(w) { return wWords.includes(w); });
+        if (hasOverlap) {
+          return workshops[i].color || null;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  // -- Workshops data (Stateful) --
   const defaultWorkshops = [
     {
-      name: 'Yoga Terapéutico',
-      instructor: 'Prof. Lucas Méndez',
+      name: 'Yoga Terap\u00e9utico',
+      instructor: 'Prof. Lucas M\u00e9ndez',
       schedule: 'Martes y Jueves 18:00',
       occupied: 12, total: 15, color: sage, active: true,
-      descripcion: 'Clase de yoga suave adaptada a todos los niveles, ideal para liberar tensiones corporales, mejorar la postura y calmar la mente a través de la respiración consciente y la meditación.'
+      descripcion: 'Clase de yoga suave adaptada a todos los niveles, ideal para liberar tensiones corporales, mejorar la postura y calmar la mente a trav\u00e9s de la respiraci\u00f3n consciente y la meditaci\u00f3n.'
     },
     {
       name: 'Taller de Cuencos Tibetanos',
-      instructor: 'Lic. Daniel Rodríguez',
-      schedule: 'Sábados 16:00',
+      instructor: 'Lic. Daniel Rodr\u00edguez',
+      schedule: 'S\u00e1bados 16:00',
       occupied: 14, total: 15, color: terracotta, active: true,
-      descripcion: 'Viaje sonoro vibracional con cuencos de cuarzo y tibetanos. Una experiencia profunda de relajación diseñada para equilibrar el sistema nervioso, aliviar el insomnio y reducir el estrés.'
+      descripcion: 'Viaje sonoro vibracional con cuencos de cuarzo y tibetanos. Una experiencia profunda de relajaci\u00f3n dise\u00f1ada para equilibrar el sistema nervioso, aliviar el insomnio y reducir el estr\u00e9s.'
     },
     {
-      name: 'Meditación & Mindfulness',
-      instructor: 'Prof. Julián Ramos',
-      schedule: 'Miércoles 19:00',
+      name: 'Meditaci\u00f3n & Mindfulness',
+      instructor: 'Prof. Juli\u00e1n Ramos',
+      schedule: 'Mi\u00e9rcoles 19:00',
       occupied: 8, total: 12, color: sage, active: true,
-      descripcion: 'Clase práctica semanal para incorporar la atención plena en tu vida diaria. Incluye ejercicios de respiración, escaneo corporal y técnicas para calmar la rumiación mental.'
+      descripcion: 'Clase pr\u00e1ctica semanal para incorporar la atenci\u00f3n plena en tu vida diaria. Incluye ejercicios de respiraci\u00f3n, escaneo corporal y t\u00e9cnicas para calmar la rumiaci\u00f3n mental.'
     }
   ];
 
@@ -41,13 +99,13 @@ window.renderMarket = function (container) {
   const workshops       = window._workshopsData;
   const activeWorkshops = workshops.filter(w => w.active !== false);
 
-  // ── Agenda: navigable date state ──
+  // -- Agenda: navigable date state --
   if (!window._agendaDate) {
     window._agendaDate = new Date();
     window._agendaDate.setHours(0, 0, 0, 0);
   }
 
-  const DAY_NAMES   = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const DAY_NAMES   = ['Domingo','Lunes','Martes','Mi\u00e9rcoles','Jueves','Viernes','S\u00e1bado'];
   const MONTH_NAMES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 
   function formatAgendaDate(d) {
@@ -56,164 +114,563 @@ window.renderMarket = function (container) {
     const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
     const dd = new Date(d); dd.setHours(0,0,0,0);
     let prefix = DAY_NAMES[dd.getDay()];
-    if      (dd.getTime() === today.getTime())     prefix = 'Hoy — '     + DAY_NAMES[dd.getDay()];
-    else if (dd.getTime() === tomorrow.getTime())  prefix = 'Mañana — '  + DAY_NAMES[dd.getDay()];
-    else if (dd.getTime() === yesterday.getTime()) prefix = 'Ayer — '    + DAY_NAMES[dd.getDay()];
+    if      (dd.getTime() === today.getTime())     prefix = 'Hoy \u2014 '     + DAY_NAMES[dd.getDay()];
+    else if (dd.getTime() === tomorrow.getTime())  prefix = 'Ma\u00f1ana \u2014 '  + DAY_NAMES[dd.getDay()];
+    else if (dd.getTime() === yesterday.getTime()) prefix = 'Ayer \u2014 '    + DAY_NAMES[dd.getDay()];
     return `${prefix} ${dd.getDate()} ${MONTH_NAMES[dd.getMonth()]} ${dd.getFullYear()}`;
   }
 
-  // ── Patient appointments (mock, keyed 'DOW-HOUR-ROOM') ──
+  // -- Patient appointments (mock, keyed 'DOW-HOUR-ROOM') --
   const APPOINTMENTS = {
     '1-09:00-0':'Laura M.', '1-10:00-0':'Diego R.', '1-15:00-0':'Ana G.', '1-15:00-1':'Carla F.',
-    '2-09:00-1':'Marcos P.','2-10:00-2':'Sofía L.', '2-11:00-2':'Tomás V.','2-14:00-2':'Renata B.',
+    '2-09:00-1':'Marcos P.','2-10:00-2':'Sof\u00eda L.', '2-11:00-2':'Tom\u00e1s V.','2-14:00-2':'Renata B.',
     '2-15:00-2':'Ignacio H.','2-17:00-0':'Valentina C.','2-18:00-0':'Emilio S.',
-    '3-09:00-0':'Bárbara T.','3-10:00-0':'Nicolás M.','3-16:00-2':'Paula R.',
-    '4-09:00-1':'Florencia D.','4-10:00-2':'Sebastián K.','4-14:00-2':'Miranda A.','4-17:00-0':'Lucía B.',
-    '5-09:00-0':'Matías P.','5-14:00-0':'Camila W.','5-15:00-1':'Roberto N.','5-16:00-2':'Verónica I.'
+    '3-09:00-0':'B\u00e1rbara T.','3-10:00-0':'Nicol\u00e1s M.','3-16:00-2':'Paula R.',
+    '4-09:00-1':'Florencia D.','4-10:00-2':'Sebasti\u00e1n K.','4-14:00-2':'Miranda A.','4-17:00-0':'Luc\u00eda B.',
+    '5-09:00-0':'Mat\u00edas P.','5-14:00-0':'Camila W.','5-15:00-1':'Roberto N.','5-16:00-2':'Ver\u00f3nica I.'
   };
 
-  // ── Build schedule rows for a given date ──
-  function buildScheduleForDate(d) {
-    const dow   = d.getDay();
-    const isSat = dow === 6;
-    const isSun = dow === 0;
+  // -- Time helper functions --
+  window._timeToMinutes = function(timeStr) {
+    if (!timeStr) return 0;
+    var parts = timeStr.split(':');
+    return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+  };
 
-    function slot(prof, roomIdx, hour) {
-      if (!prof) return { prof: '—', patient: null, roomIdx, hour };
-      const key = `${dow}-${hour}-${roomIdx}`;
-      return { prof, patient: APPOINTMENTS[key] || null, roomIdx, hour };
+  function padZero(num) {
+    return num < 10 ? '0' + num : String(num);
+  }
+
+  window._minutesToTime = function(minutes) {
+    var h = Math.floor(minutes / 60);
+    var m = minutes % 60;
+    return padZero(h) + ':' + padZero(m);
+  };
+
+  window._getAgendaEventsForDate = function(d) {
+    var dow = d.getDay();
+    var isSat = dow === 6;
+    var isSun = dow === 0;
+    var dateKey = d.getFullYear() + '-' + padZero(d.getMonth() + 1) + '-' + padZero(d.getDate());
+
+    var defaults = [];
+
+    function timeToMinutes(t) { return window._timeToMinutes(t); }
+    function minutesToTime(m) { return window._minutesToTime(m); }
+
+    // Saturday defaults
+    if (isSat) {
+      defaults.push({ start: '10:00', end: '11:00', prof: 'Taller de Cuencos Tibetanos', roomIdx: 4, type: 'taller' });
+      defaults.push({ start: '16:00', end: '17:00', prof: 'Taller de Cuencos Tibetanos', roomIdx: 4, type: 'taller' });
+    } else if (!isSun) {
+      // Mon-Fri defaults
+      var isMWF = [1,3,5].includes(dow);
+      var isTT  = [2,4].includes(dow);
+      var isWed = dow === 3;
+      var hasGarcia    = isMWF;
+      var hasTorres    = [1,5].includes(dow);
+      var hasMendez    = isTT;
+      var hasRodriguez = isTT;
+
+      function addDef(hour, roomIdx, prof, type) {
+        if (!prof) return;
+        var startMin = timeToMinutes(hour);
+        var endMin = startMin + 60;
+        var endHour = minutesToTime(endMin);
+        var key = dow + '-' + hour + '-' + roomIdx;
+        var patient = APPOINTMENTS[key] || null;
+        defaults.push({
+          start: hour,
+          end: endHour,
+          prof: prof,
+          roomIdx: roomIdx,
+          type: type || 'profesional',
+          patient: patient
+        });
+      }
+
+      // 09:00
+      addDef('09:00', 0, hasGarcia ? 'Lic. Mar\u00eda Garc\u00eda' : null);
+      addDef('09:00', 1, isTT ? 'Dra. Marina Fossati' : null);
+      addDef('09:00', 2, isTT ? 'Lic. Daniel Rodr\u00edguez' : null);
+
+      // 10:00
+      addDef('10:00', 0, hasGarcia ? 'Lic. Mar\u00eda Garc\u00eda' : null);
+      addDef('10:00', 1, isTT ? 'Dra. Marina Fossati' : null);
+      addDef('10:00', 2, isTT ? 'Lic. Daniel Rodr\u00edguez' : null);
+      addDef('10:00', 3, hasMendez ? 'Prof. Lucas M\u00e9ndez' : null, 'taller');
+
+      // 11:00
+      addDef('11:00', 1, isTT ? 'Dra. Marina Fossati' : null);
+      addDef('11:00', 2, isTT ? 'Dra. Valentina Ruiz' : null);
+      addDef('11:00', 3, hasMendez ? 'Prof. Lucas M\u00e9ndez' : null, 'taller');
+
+      // 14:00
+      addDef('14:00', 0, hasTorres ? 'Lic. Camila Torres' : null);
+      addDef('14:00', 2, isTT ? 'Lic. Daniel Rodr\u00edguez' : null);
+
+      // 15:00
+      addDef('15:00', 0, hasTorres ? 'Lic. Camila Torres' : null);
+      addDef('15:00', 1, hasGarcia ? 'Lic. Mar\u00eda Garc\u00eda' : null);
+      addDef('15:00', 2, isTT ? 'Lic. Daniel Rodr\u00edguez' : null);
+
+      // 16:00
+      addDef('16:00', 2, [3,5].includes(dow) ? 'Dra. Valentina Ruiz' : null);
+      addDef('16:00', 3, isTT ? 'Taller grupal' : null, 'taller');
+      addDef('16:00', 4, isWed ? 'Meditaci\u00f3n & Mindfulness' : null, 'taller');
+
+      // 17:00
+      addDef('17:00', 0, hasRodriguez ? 'Lic. Daniel Rodr\u00edguez' : null);
+      addDef('17:00', 3, isTT ? 'Taller grupal' : null, 'taller');
+      addDef('17:00', 4, isTT ? 'Taller de Cuencos Tibetanos' : null, 'taller');
+
+      // 18:00
+      addDef('18:00', 0, hasRodriguez ? 'Lic. Daniel Rodr\u00edguez' : null);
+      addDef('18:00', 4, isTT ? 'Yoga Terap\u00e9utico' : null, 'taller');
     }
-    const ws  = (s, roomIdx, hour) => ({ prof: s, patient: null, isTaller: true, roomIdx, hour });
-    const cls = (s, roomIdx, hour) => ({ prof: s, patient: null, isClosed: true, roomIdx, hour });
-    const emp = (roomIdx, hour)    => ({ prof: '—', patient: null, roomIdx, hour });
 
-    if (isSat) return [
-      { hour:'10:00', cols:[cls('Sin turnos',0,'10:00'),cls('Sin turnos',1,'10:00'),cls('Sin turnos',2,'10:00'),cls('Sin turnos',3,'10:00'),ws(`Taller Cuencos (${(workshops[1]||{}).occupied||0}/${(workshops[1]||{}).total||0})`,4,'10:00')] },
-      { hour:'14:00', cols:[cls('Sin turnos',0,'14:00'),cls('Sin turnos',1,'14:00'),cls('Sin turnos',2,'14:00'),cls('Sin turnos',3,'14:00'),emp(4,'14:00')] },
-      { hour:'16:00', cols:[cls('Sin turnos',0,'16:00'),cls('Sin turnos',1,'16:00'),cls('Sin turnos',2,'16:00'),cls('Sin turnos',3,'16:00'),ws(`Taller Cuencos (${(workshops[1]||{}).occupied||0}/${(workshops[1]||{}).total||0})`,4,'16:00')] },
-    ];
+    // Load customs
+    var customs = [];
+    var customSlots = (window._agendaCustomSlots || {})[dateKey] || {};
+    Object.keys(customSlots).forEach(function(key) {
+      var parts = key.split('-');
+      if (parts.length < 2) return;
+      var startStr = parts[0];
+      var roomIdx = parseInt(parts[1], 10);
+      var val = customSlots[key];
+      if (!val) return;
 
-    if (isSun) return [{ hour:'—', cols:[0,1,2,3,4].map(i => cls('Espacio cerrado',i,'—')) }];
+      var start = val.start || startStr;
+      var duration = val.service && val.service.duration ? val.service.duration : 60;
+      var end = val.end || minutesToTime(timeToMinutes(start) + duration);
 
-    const isMWF = [1,3,5].includes(dow);
-    const isTT  = [2,4].includes(dow);
-    const isWed = dow === 3;
-    const hasGarcia    = isMWF;
-    const hasTorres    = [1,5].includes(dow);
-    const hasMendez    = isTT;
-    const hasRodriguez = isTT;
-
-    const baseRows = [
-      { hour:'09:00', cols:[ slot(hasGarcia?'Lic. García':null,0,'09:00'), slot(isTT?'Dra. Fossati':null,1,'09:00'), slot(isTT?'Dr. Rodríguez':null,2,'09:00'), emp(3,'09:00'), emp(4,'09:00') ]},
-      { hour:'10:00', cols:[ slot(hasGarcia?'Lic. García':null,0,'10:00'), slot(isTT?'Dra. Fossati':null,1,'10:00'), slot(isTT?'Dr. Rodríguez':null,2,'10:00'), hasMendez?ws('Prof. Méndez (Yoga)',3,'10:00'):emp(3,'10:00'), emp(4,'10:00') ]},
-      { hour:'11:00', cols:[ emp(0,'11:00'), slot(isTT?'Dra. Fossati':null,1,'11:00'), slot(isTT?'Dra. Ruiz':null,2,'11:00'), hasMendez?ws('Prof. Méndez (Yoga)',3,'11:00'):emp(3,'11:00'), emp(4,'11:00') ]},
-      { hour:'14:00', cols:[ slot(hasTorres?'Lic. Torres':null,0,'14:00'), emp(1,'14:00'), slot(isTT?'Dr. Rodríguez':null,2,'14:00'), emp(3,'14:00'), emp(4,'14:00') ]},
-      { hour:'15:00', cols:[ slot(hasTorres?'Lic. Torres':null,0,'15:00'), slot(hasGarcia?'Lic. García':null,1,'15:00'), slot(isTT?'Dr. Rodríguez':null,2,'15:00'), emp(3,'15:00'), emp(4,'15:00') ]},
-      { hour:'16:00', cols:[ emp(0,'16:00'), emp(1,'16:00'), slot([3,5].includes(dow)?'Dra. Ruiz':null,2,'16:00'), isTT?ws('Taller grupal',3,'16:00'):emp(3,'16:00'), isWed?ws(`Meditación (${(workshops[2]||{}).occupied||0}/${(workshops[2]||{}).total||0})`,4,'16:00'):emp(4,'16:00') ]},
-      { hour:'17:00', cols:[ slot(hasRodriguez?'Dr. Rodríguez':null,0,'17:00'), emp(1,'17:00'), emp(2,'17:00'), isTT?ws('Taller grupal',3,'17:00'):emp(3,'17:00'), isTT?ws(`Taller Cuencos (${(workshops[1]||{}).occupied||0}/${(workshops[1]||{}).total||0})`,4,'17:00'):emp(4,'17:00') ]},
-      { hour:'18:00', cols:[ slot(hasRodriguez?'Dr. Rodríguez':null,0,'18:00'), emp(1,'18:00'), emp(2,'18:00'), emp(3,'18:00'), isTT?ws(`Yoga Terapéutico (${(workshops[0]||{}).occupied||0}/${(workshops[0]||{}).total||0})`,4,'18:00'):emp(4,'18:00') ]},
-    ];
-
-    // Merge custom slots from _agendaCustomSlots
-    const dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const customSlots = (window._agendaCustomSlots || {})[dateKey] || {};
-
-    baseRows.forEach(row => {
-      row.cols.forEach((cell, colIdx) => {
-        const slotKey = `${row.hour}-${colIdx}`;
-        const custom = customSlots[slotKey];
-        if (custom) {
-          if (cell.prof === '—' || !cell.prof) {
-            // Empty slot → fill with custom assignment
-            if (custom.type === 'taller') {
-              row.cols[colIdx] = { prof: custom.name, patient: custom.patient || null, isTaller: true, roomIdx: colIdx, hour: row.hour };
-            } else {
-              row.cols[colIdx] = { prof: custom.name, patient: custom.patient || null, roomIdx: colIdx, hour: row.hour };
-            }
-          } else {
-            // Existing slot → apply patient override if set
-            if (custom.patient) row.cols[colIdx].patient = custom.patient;
-            if (custom.name && custom.name !== cell.prof) {
-              row.cols[colIdx].prof = custom.name;
-              row.cols[colIdx].isTaller = custom.type === 'taller';
-            }
-          }
-        }
+      customs.push({
+        key: key,
+        start: start,
+        end: end,
+        prof: val.name || '',
+        patient: val.patient || null,
+        roomIdx: roomIdx,
+        type: val.type || 'profesional',
+        service: val.service || null,
+        price: val.price !== undefined ? val.price : null,
+        custom: true,
+        deleted: val.name === '' || val.type === 'empty'
       });
     });
 
-    return baseRows;
+    var activeEvents = [];
+
+    // Filter defaults
+    defaults.forEach(function(def) {
+      var defStart = timeToMinutes(def.start);
+      var defEnd = timeToMinutes(def.end);
+
+      var hasOverlap = customs.some(function(cust) {
+        if (cust.roomIdx !== def.roomIdx) return false;
+        var custStart = timeToMinutes(cust.start);
+        var custEnd = timeToMinutes(cust.end);
+        return (defStart < custEnd) && (custStart < defEnd);
+      });
+
+      if (!hasOverlap) {
+        activeEvents.push(def);
+      }
+    });
+
+    // Add active customs
+    customs.forEach(function(cust) {
+      if (!cust.deleted) {
+        activeEvents.push(cust);
+      }
+    });
+
+    return activeEvents;
+  };
+
+  function getDefaultServicesForProf(prof) {
+    if (prof.services && prof.services.length > 0) {
+      return prof.services;
+    }
+    var price = 3000;
+    if (prof.room === 'Consultorio A') price = 3000;
+    else if (prof.room === 'Consultorio B') price = 2500;
+    else if (prof.room === 'Consultorio C') price = 3500;
+    else if (prof.room === 'Consultorio D') price = 2000;
+    return [
+      { name: prof.specialty || 'Consulta General', price: price, duration: 60 }
+    ];
   }
 
-  const ROOM_LABELS = ['Consultorio A','Consultorio B','Consultorio C','Consultorio D','Hall'];
+  const ROOM_LABELS = ['Consultorio A','Consultorio B','Consultorio C','Consultorio D','Hall','Espacio Coworking'];
 
-  // ── Render one table cell ──
-  function renderCell(s, rowHour) {
-    const { prof, patient, isTaller, isClosed, roomIdx } = s;
-    const isFree      = !prof || prof === '—';
-    const isReserved  = !isFree && !isTaller && !isClosed && patient;
-    const isAvailable = !isFree && !isTaller && !isClosed && !patient;
+  function buildAgendaHtml() {
+    try {
+      var d = window._agendaDate;
+      var dateLabel = formatAgendaDate(d);
+      var today = new Date(); today.setHours(0,0,0,0);
+      var isToday = d.getTime() === today.getTime();
+      var isSun = d.getDay() === 0;
 
-    let bg = 'transparent', borderLeft = 'none', profColor = 'var(--color-text-muted)', profWeight = '400';
+      var events = window._getAgendaEventsForDate(d);
 
-    if      (isTaller)    { bg = lightTerracotta; borderLeft = `3px solid ${terracotta}`; profColor = terracotta; profWeight = '600'; }
-    else if (isReserved)  { bg = sage+'22';       borderLeft = `3px solid ${sage}`;       profColor = '#3a4d30';  profWeight = '700'; }
-    else if (isAvailable) { bg = lightSage;       borderLeft = `3px solid ${sage}60`;     profColor = 'var(--color-text-primary)'; profWeight = '500'; }
+      var roomDefs = [
+        { label: 'Consultorio A', color: sage, idx: 0 },
+        { label: 'Consultorio B', color: sage, idx: 1 },
+        { label: 'Consultorio C', color: terracotta, idx: 2 },
+        { label: 'Consultorio D', color: sage, idx: 3 },
+        { label: 'Hall (Talleres)', color: terracotta, idx: 4 },
+        { label: 'Coworking', color: sage, idx: 5 }
+      ];
 
-    const profLine = (isFree||isClosed)
-      ? `<span style="color:var(--color-text-muted);font-weight:400;font-size:0.82rem;">${prof}</span>`
-      : `<span style="color:${profColor};font-weight:${profWeight};font-size:0.82rem;">${prof}</span>`;
+      var hoursList = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
-    const badge = isReserved
-      ? `<div style="margin-top:3px;display:flex;align-items:center;gap:4px;">
-           <span style="width:5px;height:5px;border-radius:50%;background:${sage};flex-shrink:0;"></span>
-           <span style="font-size:0.71rem;color:${sage};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;">${patient}</span>
-         </div>` : '';
+      // Render cards helper
+      function renderCardsForRoom(roomIdx) {
+        var roomEvents = events.filter(function(ev) { return ev.roomIdx === roomIdx; });
+        return roomEvents.map(function(ev) {
+          var colors = (function() {
+            var hex = getProfColor(ev.prof);
+            if (!hex) {
+              hex = ev.type === 'taller' ? terracotta : sage;
+            }
+            return {
+              bg: hex + '1A',
+              border: hex,
+              text: hex
+            };
+          })();
 
-    // ALL non-closed cells are clickable
-    const clickable = !isClosed && rowHour !== '—';
-    const hoverBg = isFree ? 'rgba(122,139,111,0.08)' : (isTaller ? lightTerracotta : bg);
-    const escapedProf = (prof||'').replace(/'/g, "\\'");
-    const escapedPatient = (patient||'').replace(/'/g, "\\'");
-    const cellType = isTaller ? 'taller' : 'profesional';
+          var baseMin = window._timeToMinutes("08:00");
+          var startMin = window._timeToMinutes(ev.start);
+          var endMin = window._timeToMinutes(ev.end);
+          var top = startMin - baseMin;
+          var height = endMin - startMin;
 
-    const clickAttr = clickable
-      ? ` onclick="window._openAgendaSlotModal('${rowHour}', ${roomIdx}, '${escapedProf}', '${escapedPatient}', '${cellType}')" style="padding:${isReserved||isAvailable||isTaller?'8px 10px 8px 9px':'10px 12px'};background:${bg};border-left:${borderLeft};border-bottom:1px solid rgba(0,0,0,0.05);vertical-align:top;min-width:120px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='${bg}'"`
-      : ` style="padding:10px 12px;background:${bg};border-left:${borderLeft};border-bottom:1px solid rgba(0,0,0,0.05);vertical-align:top;min-width:120px;"`;
+          var clampedTop = Math.max(0, Math.min(720, top));
+          var clampedHeight = Math.max(15, Math.min(720 - clampedTop, height));
 
-    const freeHint = (clickable && isFree) ? `<span style="font-size:0.68rem;color:rgba(0,0,0,0.18);display:block;margin-top:2px;">+ asignar</span>` : '';
+          var cardStyle = 'position: absolute; top: ' + clampedTop + 'px; left: 4px; right: 4px; height: ' + clampedHeight + 'px; background: ' + colors.bg + '; border-left: 3.5px solid ' + colors.border + '; border-top: 1px solid ' + colors.border + '40; border-right: 1px solid ' + colors.border + '40; border-bottom: 1px solid ' + colors.border + '40; border-radius: 6px; padding: 6px 8px; overflow: hidden; cursor: grab; display: flex; flex-direction: column; justify-content: flex-start; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.04); transition: box-shadow 0.15s, border-color 0.15s;';
 
-    return `<td${clickAttr}>${profLine}${badge}${freeHint}</td>`;
+          var patientLine = ev.patient
+            ? '<div style="font-size: 0.72rem; font-weight: 700; color: ' + colors.text + '; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">\uD83D\uDC64 ' + ev.patient + '</div>'
+            : '';
+
+          var serviceName = ev.service ? ev.service.name : (ev.type === 'taller' ? 'Taller' : '');
+          var serviceLine = serviceName
+            ? '<div style="font-size: 0.65rem; color: var(--color-text-muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + serviceName + '</div>'
+            : '';
+
+          var timeText = '<span style="font-size: 0.65rem; font-weight: 600; color: ' + colors.text + '; opacity: 0.85;">' + ev.start + ' - ' + ev.end + '</span>';
+          var resizeHandle = '<div class="resize-handle" style="position: absolute; bottom: 0; left: 0; right: 0; height: 6px; cursor: s-resize; background: transparent; z-index: 20;" onmouseover="this.style.background=\'' + colors.border + '30\'" onmouseout="this.style.background=\'transparent\'"></div>';
+          var customIndicator = ev.custom
+            ? '<div style="position: absolute; top: 4px; right: 6px; width: 4px; height: 4px; border-radius: 50%; background: ' + colors.border + ';" title="Modificado"></div>'
+            : '';
+
+          var cleanProf = (ev.prof || '').replace(/"/g, '&quot;');
+          var cleanPatient = (ev.patient || '').replace(/"/g, '&quot;');
+
+          return '<div class="calendar-event-card" data-key="' + (ev.key || (ev.start + '-' + ev.roomIdx)) + '" data-start="' + ev.start + '" data-end="' + ev.end + '" data-room="' + ev.roomIdx + '" data-prof="' + cleanProf + '" data-patient="' + cleanPatient + '" data-type="' + ev.type + '" style="' + cardStyle + '" onmousedown="window._onCardMouseDown(event, this)">' +
+            customIndicator +
+            '<div style="font-size: 0.76rem; font-weight: 700; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">' + (ev.prof || '\u2014') + '</div>' +
+            serviceLine +
+            patientLine +
+            '<div style="margin-top: auto; display: flex; align-items: center; justify-content: space-between; padding-top: 2px;">' +
+              timeText +
+            '</div>' +
+            resizeHandle +
+          '</div>';
+        }).join('');
+      }
+
+      // Calculate room occupied hours vs scheduled
+      var headersHtml = roomDefs.map(function(rc) {
+        var roomEvents = events.filter(function(ev) { return ev.roomIdx === rc.idx; });
+        var totalHrs = 0;
+        var reservedHrs = 0;
+        roomEvents.forEach(function(ev) {
+          var dur = (window._timeToMinutes(ev.end) - window._timeToMinutes(ev.start)) / 60;
+          totalHrs += dur;
+          if (ev.patient) {
+            reservedHrs += dur;
+          }
+        });
+        
+        var pct = totalHrs > 0 ? Math.round((reservedHrs / totalHrs) * 100) : 0;
+        var progressHtml = totalHrs > 0
+          ? '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">' +
+               '<div style="flex:1;height:4px;background:rgba(0,0,0,0.07);border-radius:2px;overflow:hidden;">' +
+                 '<div style="width:' + pct + '%;height:100%;background:' + rc.color + ';border-radius:2px;"></div>' +
+               '</div>' +
+               '<span style="font-size:0.68rem;color:var(--color-text-muted);white-space:nowrap;">' + reservedHrs + '/' + totalHrs + 'h</span>' +
+             '</div>'
+          : '<div style="font-size:0.68rem;color:var(--color-text-muted);margin-top:2px;">Sin agenda</div>';
+
+        if (rc.idx === 4) {
+          progressHtml = '<div style="font-size:0.68rem;color:var(--color-text-muted);margin-top:2px;">' + roomEvents.length + ' taller' + (roomEvents.length !== 1 ? 'es' : '') + '</div>';
+        }
+
+        return '<div style="flex:1; padding:12px; border-right:1px solid rgba(0,0,0,0.05); min-width:120px; box-sizing:border-box;">' +
+          '<div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:' + rc.color + ';">' + rc.label + '</div>' +
+          progressHtml +
+        '</div>';
+      }).join('');
+
+      var sunPlaceholder = isSun
+        ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.02);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:600;color:var(--color-text-muted);font-style:italic;z-index:30;">Domingo \u2014 Espacio Cerrado</div>'
+        : '';
+
+      return `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+          <div style="flex:1;">
+            <h2 style="margin:0 0 2px;font-size:1.4rem;">Agenda del d\u00eda</h2>
+            <p style="margin:0;font-size:0.78rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;">Espacio Alvarado</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${!isToday ? `<button onclick="window._agendaGoToday()" style="padding:6px 14px;font-size:0.78rem;font-weight:700;border-radius:var(--radius-pill);background:${sage}18;color:${sage};border:1.5px solid ${sage}40;cursor:pointer;">Hoy</button>` : ''}
+            <div style="display:flex;align-items:center;background:var(--bg-card-alt);border-radius:var(--radius-pill);border:1px solid rgba(0,0,0,0.08);overflow:hidden;">
+              <button style="padding:8px 16px;background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--color-text-muted);line-height:1;transition:background 0.15s;"
+                onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='none'"
+                onclick="window._agendaNav(-1)">\u2039</button>
+              <div style="padding:0 16px;font-size:0.9rem;font-weight:700;color:${isToday?sage:'var(--color-text-primary)'};min-width:230px;text-align:center;white-space:nowrap;">
+                ${dateLabel}
+              </div>
+              <button style="padding:8px 16px;background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--color-text-muted);line-height:1;transition:background 0.15s;"
+                onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='none'"
+                onclick="window._agendaNav(1)">\u203A</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calendar-grid-container" style="display:flex; flex-direction:column; background:var(--bg-card); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; border:1px solid rgba(0,0,0,0.06); position:relative;">
+          <!-- Headers -->
+          <div class="calendar-headers" style="display:flex; background:var(--bg-card-alt); border-bottom:1.5px solid rgba(0,0,0,0.08); padding-left:60px;">
+            ${headersHtml}
+          </div>
+
+          <!-- Grid Body -->
+          <div class="calendar-body" style="display:flex; position:relative; height:720px; user-select:none;">
+            ${sunPlaceholder}
+            <!-- Left Time Axis -->
+            <div class="time-axis" style="width:60px; height:720px; position:relative; background:var(--bg-card-alt); border-right:1.5px solid rgba(0,0,0,0.08); flex-shrink:0;">
+              ${hoursList.map((h, i) => {
+                return `<div style="position:absolute; top:${i * 60 - 7}px; right:8px; font-size:0.72rem; font-weight:700; color:var(--color-text-secondary);">${h}</div>`;
+              }).join('')}
+            </div>
+
+            <!-- Grid Columns Area -->
+            <div class="columns-area" id="calendar-columns-area" style="display:flex; flex:1; position:relative; height:720px; overflow:hidden;">
+              <!-- Background Horizontal Hour Lines -->
+              ${hoursList.map((h, i) => {
+                return `<div style="position:absolute; top:${i * 60}px; left:0; right:0; height:1px; background:rgba(0,0,0,0.06); pointer-events:none;"></div>`;
+              }).join('')}
+
+              <!-- Columns -->
+              ${roomDefs.map(rc => {
+                return `
+                  <div class="room-column" data-room="${rc.idx}" style="flex:1; height:720px; position:relative; border-right:1px solid rgba(0,0,0,0.04); min-width:120px; box-sizing:border-box;" onclick="window._onColumnClick(event, ${rc.idx})">
+                    ${renderCardsForRoom(rc.idx)}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      console.error('buildAgendaHtml error:', err);
+      return '<div class="card" style="padding:24px;color:#d9534f;"><strong>Error al cargar agenda:</strong> ' + err.message + '</div>';
+    }
   }
 
-  function renderAgendaRow(row) {
-    const hourCell = `<td style="padding:10px 14px;font-weight:700;font-size:0.82rem;color:var(--color-text-secondary);background:var(--bg-card-alt);border-bottom:1px solid rgba(0,0,0,0.05);white-space:nowrap;">${row.hour}</td>`;
-    return `<tr>${hourCell}${row.cols.map(s => renderCell(s, row.hour)).join('')}</tr>`;
-  }
+  window._onColumnClick = function(e, roomIdx) {
+    if (e.target.classList.contains('room-column')) {
+      var rect = e.currentTarget.getBoundingClientRect();
+      var clickY = e.clientY - rect.top;
+      var clickedMin = Math.round(clickY / 15) * 15; // snap to 15 min
+      var startMin = 8 * 60 + clickedMin;
+      var startStr = window._minutesToTime(startMin);
+      window._openAgendaSlotModal(startStr, roomIdx);
+    }
+  };
 
-  // ── Agenda Slot Assignment Modal (supports empty + edit mode) ──
-  window._openAgendaSlotModal = function(hour, roomIdx, currentProf, currentPatient, currentType) {
-    const existing = document.querySelector('.agenda-slot-overlay');
+  window._onCardMouseDown = function(e, cardEl) {
+    var isResize = e.target.classList.contains('resize-handle');
+    e.stopPropagation();
+
+    if (e.button !== 0) return;
+
+    var key = cardEl.getAttribute('data-key');
+    var startStr = cardEl.getAttribute('data-start');
+    var endStr = cardEl.getAttribute('data-end');
+    var roomIdx = parseInt(cardEl.getAttribute('data-room'), 10);
+    var prof = cardEl.getAttribute('data-prof');
+    var patient = cardEl.getAttribute('data-patient');
+    var type = cardEl.getAttribute('data-type');
+
+    var startY = e.pageY;
+    var startX = e.pageX;
+    var cardTop = cardEl.offsetTop;
+    var cardHeight = cardEl.offsetHeight;
+
+    var hasMoved = false;
+
+    var columnsArea = document.getElementById('calendar-columns-area');
+    if (!columnsArea) return;
+    var columnsRect = columnsArea.getBoundingClientRect();
+    var colWidth = columnsRect.width / 6;
+
+    function onMouseMove(moveEv) {
+      var dy = moveEv.pageY - startY;
+      var dx = moveEv.pageX - startX;
+
+      if (Math.abs(dy) > 4 || Math.abs(dx) > 4) {
+        hasMoved = true;
+      }
+
+      if (!hasMoved) return;
+
+      if (isResize) {
+        var newHeight = cardHeight + dy;
+        var snappedHeight = Math.max(15, Math.round(newHeight / 15) * 15);
+        cardEl.style.height = snappedHeight + 'px';
+
+        var startMin = window._timeToMinutes(startStr);
+        var newEndMin = startMin + snappedHeight;
+        var newEndStr = window._minutesToTime(newEndMin);
+
+        var timeSpan = cardEl.querySelector('span');
+        if (timeSpan) {
+          timeSpan.textContent = startStr + ' - ' + newEndStr;
+        }
+        cardEl.setAttribute('data-new-end', newEndStr);
+      } else {
+        cardEl.style.zIndex = '1000';
+        cardEl.style.opacity = '0.85';
+
+        var newTop = cardTop + dy;
+        var snappedTop = Math.max(0, Math.min(720 - cardEl.offsetHeight, Math.round(newTop / 15) * 15));
+        cardEl.style.top = snappedTop + 'px';
+
+        var clientX = moveEv.clientX;
+        var relativeX = clientX - columnsRect.left;
+        var targetRoomIdx = Math.floor(relativeX / colWidth);
+        targetRoomIdx = Math.max(0, Math.min(5, targetRoomIdx));
+
+        var targetColDiv = columnsArea.querySelectorAll('.room-column')[targetRoomIdx];
+        if (targetColDiv && cardEl.parentElement !== targetColDiv) {
+          targetColDiv.appendChild(cardEl);
+        }
+
+        var newStartMin = 8 * 60 + snappedTop;
+        var durationMin = window._timeToMinutes(endStr) - window._timeToMinutes(startStr);
+        var newEndMin = newStartMin + durationMin;
+
+        var newStartStr = window._minutesToTime(newStartMin);
+        var newEndStr = window._minutesToTime(newEndMin);
+
+        var timeSpan = cardEl.querySelector('span');
+        if (timeSpan) {
+          timeSpan.textContent = newStartStr + ' - ' + newEndStr;
+        }
+
+        cardEl.setAttribute('data-new-start', newStartStr);
+        cardEl.setAttribute('data-new-end', newEndStr);
+        cardEl.setAttribute('data-new-room', targetRoomIdx);
+      }
+    }
+
+    function onMouseUp(upEv) {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+
+      if (!hasMoved) {
+        window._openAgendaSlotModal(startStr, roomIdx, prof, patient, type, key);
+        return;
+      }
+
+      var d = window._agendaDate;
+      var dateKey = d.getFullYear() + '-' + padZero(d.getMonth() + 1) + '-' + padZero(d.getDate());
+
+      if (isResize) {
+        var finalEnd = cardEl.getAttribute('data-new-end') || endStr;
+        if (!window._agendaCustomSlots) window._agendaCustomSlots = {};
+        if (!window._agendaCustomSlots[dateKey]) window._agendaCustomSlots[dateKey] = {};
+
+        var slot = window._agendaCustomSlots[dateKey][key] || { name: prof, type: type, patient: patient || null };
+        slot.start = startStr;
+        slot.end = finalEnd;
+
+        window._agendaCustomSlots[dateKey][key] = slot;
+      } else {
+        var finalStart = cardEl.getAttribute('data-new-start') || startStr;
+        var finalEnd = cardEl.getAttribute('data-new-end') || endStr;
+        var finalRoom = parseInt(cardEl.getAttribute('data-new-room') !== null ? cardEl.getAttribute('data-new-room') : roomIdx, 10);
+
+        if (!window._agendaCustomSlots) window._agendaCustomSlots = {};
+        if (!window._agendaCustomSlots[dateKey]) window._agendaCustomSlots[dateKey] = {};
+
+        if (window._agendaCustomSlots[dateKey][key]) {
+          delete window._agendaCustomSlots[dateKey][key];
+        } else {
+          var defaults = window._getAgendaEventsForDate(d);
+          var isDefault = defaults.some(function(def) {
+            return !def.custom && def.start === startStr && def.roomIdx === roomIdx;
+          });
+          if (isDefault) {
+            window._agendaCustomSlots[dateKey][key] = { name: '', type: 'empty', patient: null };
+          }
+        }
+
+        var newKey = finalStart + '-' + finalRoom;
+        window._agendaCustomSlots[dateKey][newKey] = {
+          name: prof,
+          type: type,
+          patient: patient || null,
+          start: finalStart,
+          end: finalEnd,
+          roomIdx: finalRoom
+        };
+      }
+
+      paintAgenda();
+    }
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  window._openAgendaSlotModal = function(hour, roomIdx, currentProf, currentPatient, currentType, currentKey) {
+    var existing = document.querySelector('.agenda-slot-overlay');
     if (existing) existing.remove();
 
     currentProf = currentProf || '';
     currentPatient = currentPatient || '';
     currentType = currentType || 'profesional';
-    const isEdit = currentProf && currentProf !== '—';
+    currentKey = currentKey || (hour + '-' + roomIdx);
+    var isEdit = currentProf && currentProf !== '\u2014';
 
-    const profData = window._profData || [];
-    const wsData = window._workshopsData || [];
-    const activeProfessionals = profData.filter(p => p.activo !== false);
-    const activeWS = wsData.filter(w => w.active !== false);
+    var profData = window._profData || [];
+    var wsData = window._workshopsData || [];
+    var activeProfessionals = profData.filter(function(p) { return p.activo !== false; });
+    var activeWS = wsData.filter(function(w) { return w.active !== false; });
 
-    const d = window._agendaDate;
-    const dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const dayLabel = formatAgendaDate(d);
+    var d = window._agendaDate;
+    var dateKey = d.getFullYear() + '-' + padZero(d.getMonth() + 1) + '-' + padZero(d.getDate());
+    var dayLabel = formatAgendaDate(d);
 
-    const isProfType = currentType !== 'taller';
-    const endHour = (() => { const [h,m]= hour.split(':'); return String(parseInt(h)+1).padStart(2,'0')+':'+m; })();
+    var isProfType = currentType !== 'taller';
+    
+    var slotValue = window._agendaCustomSlots && window._agendaCustomSlots[dateKey] ? window._agendaCustomSlots[dateKey][currentKey] : null;
+    var activeService = slotValue ? slotValue.service : null;
 
-    const overlay = document.createElement('div');
+    var endHour = (function() {
+      var startMin = window._timeToMinutes(hour);
+      var endMin = startMin + 60;
+      return window._minutesToTime(endMin);
+    })();
+
+    var overlay = document.createElement('div');
     overlay.className = 'agenda-slot-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;';
 
@@ -234,7 +691,7 @@ window.renderMarket = function (container) {
         <div style="padding:24px 28px 0;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <h2 style="margin:0;font-size:1.15rem;color:var(--color-text-primary);">${isEdit ? 'Editar horario' : 'Asignar horario'}</h2>
-            <button onclick="this.closest('.agenda-slot-overlay').remove()" style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.06);color:var(--color-text-muted);font-size:1.1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;">✕</button>
+            <button onclick="this.closest('.agenda-slot-overlay').remove()" style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.06);color:var(--color-text-muted);font-size:1.1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;">\u2715</button>
           </div>
           <div style="display:flex;gap:10px;padding:8px 0 4px;font-size:0.78rem;color:var(--color-text-muted);">
             <span style="background:${sage}15;color:${sage};font-weight:700;padding:3px 10px;border-radius:4px;">${hour}</span>
@@ -251,36 +708,46 @@ window.renderMarket = function (container) {
               <input type="time" id="aslot-time-start" value="${hour}">
             </div>
             <div>
-              <label>Hora de finalización</label>
+              <label>Hora de finalizaci\u00f3n</label>
               <input type="time" id="aslot-time-end" value="${endHour}">
             </div>
           </div>
 
           <!-- Type selector -->
           <div>
-            <label>Tipo de asignación</label>
+            <label>Tipo de asignaci\u00f3n</label>
             <div style="display:flex;gap:10px;">
               <button class="aslot-type-btn ${isProfType?'active':''}" id="aslot-btn-prof" onclick="
                 document.getElementById('aslot-btn-prof').classList.add('active');
                 document.getElementById('aslot-btn-taller').classList.remove('active');
                 document.getElementById('aslot-prof-select').style.display='block';
+                document.getElementById('aslot-service-select').style.display='block';
                 document.getElementById('aslot-taller-select').style.display='none';
-              ">👤 Profesional</button>
+              ">\uD83D\uDC64 Profesional</button>
               <button class="aslot-type-btn ${!isProfType?'active':''}" id="aslot-btn-taller" onclick="
                 document.getElementById('aslot-btn-taller').classList.add('active');
                 document.getElementById('aslot-btn-prof').classList.remove('active');
                 document.getElementById('aslot-taller-select').style.display='block';
                 document.getElementById('aslot-prof-select').style.display='none';
-              ">📋 Taller</button>
+                document.getElementById('aslot-service-select').style.display='none';
+              ">\uD83D\uDCCB Taller</button>
             </div>
           </div>
 
           <!-- Professional dropdown -->
           <div id="aslot-prof-select" style="display:${isProfType?'block':'none'};">
             <label>Profesional</label>
-            <select id="aslot-prof-dropdown">
+            <select id="aslot-prof-dropdown" onchange="window._onAgendaProfChange()">
               <option value="" disabled ${!isEdit||!isProfType?'selected':''}>Seleccionar profesional...</option>
-              ${activeProfessionals.map(p => `<option value="${p.name}" ${isEdit&&isProfType&&currentProf===p.name?'selected':''}>${p.name} — ${p.specialty}</option>`).join('')}
+              ${activeProfessionals.map(p => `<option value="${p.name}" ${isEdit&&isProfType&&currentProf===p.name?'selected':''}>${p.name} \u2014 ${p.specialty}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Services dropdown -->
+          <div id="aslot-service-select" style="display:${isProfType?'block':'none'};">
+            <label>Servicio</label>
+            <select id="aslot-service-dropdown" onchange="window._onAgendaServiceChange()">
+              <!-- populated dynamically -->
             </select>
           </div>
 
@@ -297,202 +764,203 @@ window.renderMarket = function (container) {
           <div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:14px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
               <label style="margin-bottom:0;">Paciente reservado</label>
-              ${currentPatient ? `<button onclick="window._clearPatientOnly('${dateKey}','${hour}',${roomIdx})" style="font-size:0.7rem;color:#d9534f;background:none;border:none;cursor:pointer;font-weight:600;text-decoration:underline;">Quitar paciente</button>` : ''}
+              ${currentPatient ? `<button onclick="window._clearPatientOnly('${dateKey}','${currentKey}',${roomIdx})" style="font-size:0.7rem;color:#d9534f;background:none;border:none;cursor:pointer;font-weight:600;text-decoration:underline;">Quitar paciente</button>` : ''}
             </div>
             <input type="text" id="aslot-patient" placeholder="Nombre del paciente (opcional)" value="${currentPatient}">
           </div>
         </div>
 
         <div style="padding:14px 28px 22px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(0,0,0,0.06);">
-          <button onclick="window._removeAgendaSlot('${dateKey}','${hour}',${roomIdx})" style="padding:9px 16px;font-size:0.82rem;background:transparent;color:#d9534f;font-weight:600;border:1px solid rgba(217,83,79,0.2);border-radius:6px;cursor:pointer;">Liberar horario</button>
+          <button onclick="window._removeAgendaSlot('${dateKey}','${currentKey}',${roomIdx})" style="padding:9px 16px;font-size:0.82rem;background:transparent;color:#d9534f;font-weight:600;border:1px solid rgba(217,83,79,0.2);border-radius:6px;cursor:pointer;">Liberar horario</button>
           <button style="padding:9px 24px;font-size:0.85rem;background:${sage};color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;"
-            onclick="window._saveAgendaSlot('${dateKey}','${hour}',${roomIdx})">${isEdit ? 'Guardar' : 'Asignar'}</button>
+            onclick="window._saveAgendaSlot('${dateKey}','${currentKey}',${roomIdx})">${isEdit ? 'Guardar' : 'Asignar'}</button>
         </div>
       </div>
     `;
 
     document.body.appendChild(overlay);
+
+    if (isProfType && currentProf) {
+      var prof = activeProfessionals.find(function(p) { return p.name === currentProf; });
+      if (prof) {
+        var services = getDefaultServicesForProf(prof);
+        var serviceSelect = document.getElementById('aslot-service-dropdown');
+        if (serviceSelect) {
+          serviceSelect.innerHTML = services.map(function(s, idx) {
+            var selected = activeService && activeService.name === s.name ? 'selected' : '';
+            return '<option value="' + idx + '" ' + selected + '>' + s.name + ' ($' + s.price + ' \u00b7 ' + s.duration + ' min)</option>';
+          }).join('');
+        }
+      }
+    }
+
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   };
 
-  window._saveAgendaSlot = function(dateKey, hour, roomIdx) {
-    const isProfActive = document.getElementById('aslot-btn-prof').classList.contains('active');
-    let name = '';
-    let type = 'profesional';
+  window._onAgendaProfChange = function() {
+    var profSelect = document.getElementById('aslot-prof-dropdown');
+    if (!profSelect) return;
+    var profName = profSelect.value;
+    var prof = (window._profData || []).find(function(p) { return p.name === profName; });
+    if (!prof) return;
+
+    var services = getDefaultServicesForProf(prof);
+    var serviceSelect = document.getElementById('aslot-service-dropdown');
+    if (!serviceSelect) return;
+
+    serviceSelect.innerHTML = services.map(function(s, idx) {
+      return '<option value="' + idx + '">' + s.name + ' ($' + s.price + ' \u00b7 ' + s.duration + ' min)</option>';
+    }).join('');
+
+    window._onAgendaServiceChange();
+  };
+
+  window._onAgendaServiceChange = function() {
+    var profSelect = document.getElementById('aslot-prof-dropdown');
+    var serviceSelect = document.getElementById('aslot-service-dropdown');
+    if (!profSelect || !serviceSelect) return;
+
+    var profName = profSelect.value;
+    var prof = (window._profData || []).find(function(p) { return p.name === profName; });
+    if (!prof) return;
+
+    var services = getDefaultServicesForProf(prof);
+    var serviceIdx = parseInt(serviceSelect.value, 10);
+    var service = services[serviceIdx];
+    if (!service) return;
+
+    var startTimeInput = document.getElementById('aslot-time-start');
+    var endTimeInput = document.getElementById('aslot-time-end');
+    if (startTimeInput && endTimeInput) {
+      var startMin = window._timeToMinutes(startTimeInput.value);
+      var endMin = startMin + service.duration;
+      endTimeInput.value = window._minutesToTime(endMin);
+    }
+  };
+
+  window._saveAgendaSlot = function(dateKey, originalKey, roomIdx) {
+    var isProfActive = document.getElementById('aslot-btn-prof').classList.contains('active');
+    var name = '';
+    var type = 'profesional';
+    var service = null;
+    var price = null;
 
     if (isProfActive) {
-      const sel = document.getElementById('aslot-prof-dropdown');
-      if (!sel || !sel.value) { alert('Seleccioná un profesional'); return; }
+      var sel = document.getElementById('aslot-prof-dropdown');
+      if (!sel || !sel.value) { alert('Seleccion\u00e1 un profesional'); return; }
       name = sel.value;
       type = 'profesional';
+
+      var serviceSel = document.getElementById('aslot-service-dropdown');
+      if (serviceSel) {
+        var prof = (window._profData || []).find(function(p) { return p.name === name; });
+        if (prof) {
+          var services = getDefaultServicesForProf(prof);
+          var idx = parseInt(serviceSel.value, 10);
+          if (services[idx]) {
+            service = services[idx];
+            price = service.price;
+          }
+        }
+      }
     } else {
-      const sel = document.getElementById('aslot-taller-dropdown');
-      if (!sel || !sel.value) { alert('Seleccioná un taller'); return; }
+      var sel = document.getElementById('aslot-taller-dropdown');
+      if (!sel || !sel.value) { alert('Seleccion\u00e1 un taller'); return; }
       name = sel.value;
       type = 'taller';
     }
 
-    const patientInput = document.getElementById('aslot-patient');
-    const patient = patientInput ? patientInput.value.trim() : '';
+    var startVal = document.getElementById('aslot-time-start').value;
+    var endVal = document.getElementById('aslot-time-end').value;
+    var patientInput = document.getElementById('aslot-patient');
+    var patient = patientInput ? patientInput.value.trim() : '';
 
     if (!window._agendaCustomSlots) window._agendaCustomSlots = {};
     if (!window._agendaCustomSlots[dateKey]) window._agendaCustomSlots[dateKey] = {};
-    window._agendaCustomSlots[dateKey][`${hour}-${roomIdx}`] = { name, type, patient: patient || null };
+
+    var newKey = startVal + '-' + roomIdx;
+
+    if (originalKey && originalKey !== newKey) {
+      delete window._agendaCustomSlots[dateKey][originalKey];
+    }
+
+    window._agendaCustomSlots[dateKey][newKey] = {
+      name: name,
+      type: type,
+      patient: patient || null,
+      start: startVal,
+      end: endVal,
+      service: service,
+      price: price
+    };
 
     document.querySelector('.agenda-slot-overlay')?.remove();
-    const root = document.getElementById('agenda-section-root');
-    if (root) root.innerHTML = buildAgendaHtml();
+    paintAgenda();
   };
 
-  // Clear only the patient, keep the professional assignment
-  window._clearPatientOnly = function(dateKey, hour, roomIdx) {
+  window._clearPatientOnly = function(dateKey, originalKey, roomIdx) {
     if (window._agendaCustomSlots && window._agendaCustomSlots[dateKey]) {
-      const slotKey = `${hour}-${roomIdx}`;
-      const slot = window._agendaCustomSlots[dateKey][slotKey];
+      var slot = window._agendaCustomSlots[dateKey][originalKey];
       if (slot) {
         slot.patient = null;
       } else {
-        // Create a slot override just to clear patient on a hardcoded slot
-        if (!window._agendaCustomSlots[dateKey]) window._agendaCustomSlots[dateKey] = {};
-        window._agendaCustomSlots[dateKey][slotKey] = { name: '', type: 'profesional', patient: null, clearPatient: true };
+        var parts = originalKey.split('-');
+        var startHour = parts[0];
+        var rIdx = parseInt(parts[1], 10);
+        var defaults = window._getAgendaEventsForDate(window._agendaDate);
+        var def = defaults.find(function(d) { return !d.custom && d.start === startHour && d.roomIdx === rIdx; });
+        var name = def ? def.prof : '';
+        var type = def ? def.type : 'profesional';
+        window._agendaCustomSlots[dateKey][originalKey] = { name: name, type: type, patient: null };
       }
     }
     document.querySelector('.agenda-slot-overlay')?.remove();
-    const root = document.getElementById('agenda-section-root');
-    if (root) root.innerHTML = buildAgendaHtml();
+    paintAgenda();
   };
 
-  window._removeAgendaSlot = function(dateKey, hour, roomIdx) {
+  window._removeAgendaSlot = function(dateKey, originalKey, roomIdx) {
     if (window._agendaCustomSlots && window._agendaCustomSlots[dateKey]) {
-      delete window._agendaCustomSlots[dateKey][`${hour}-${roomIdx}`];
+      delete window._agendaCustomSlots[dateKey][originalKey];
+
+      var parts = originalKey.split('-');
+      var startHour = parts[0];
+      var rIdx = parseInt(parts[1], 10);
+      
+      var dow = window._agendaDate.getDay();
+      var isSat = dow === 6;
+      var isSun = dow === 0;
+      var hasDefault = false;
+      if (isSat && rIdx === 4 && (startHour === '10:00' || startHour === '16:00')) {
+        hasDefault = true;
+      } else if (!isSat && !isSun) {
+        var isMWF = [1,3,5].includes(dow);
+        var isTT  = [2,4].includes(dow);
+        var isWed = dow === 3;
+        var hasGarcia    = isMWF;
+        var hasTorres    = [1,5].includes(dow);
+        var hasMendez    = isTT;
+        var hasRodriguez = isTT;
+
+        if (startHour === '09:00' && ((rIdx === 0 && hasGarcia) || (rIdx === 1 && isTT) || (rIdx === 2 && isTT))) hasDefault = true;
+        else if (startHour === '10:00' && ((rIdx === 0 && hasGarcia) || (rIdx === 1 && isTT) || (rIdx === 2 && isTT) || (rIdx === 3 && hasMendez))) hasDefault = true;
+        else if (startHour === '11:00' && ((rIdx === 1 && isTT) || (rIdx === 2 && isTT) || (rIdx === 3 && hasMendez))) hasDefault = true;
+        else if (startHour === '14:00' && ((rIdx === 0 && hasTorres) || (rIdx === 2 && isTT))) hasDefault = true;
+        else if (startHour === '15:00' && ((rIdx === 0 && hasTorres) || (rIdx === 1 && hasGarcia) || (rIdx === 2 && isTT))) hasDefault = true;
+        else if (startHour === '16:00' && ((rIdx === 2 && [3,5].includes(dow)) || (rIdx === 3 && isTT) || (rIdx === 4 && isWed))) hasDefault = true;
+        else if (startHour === '17:00' && ((rIdx === 0 && hasRodriguez) || (rIdx === 3 && isTT) || (rIdx === 4 && isTT))) hasDefault = true;
+        else if (startHour === '18:00' && ((rIdx === 0 && hasRodriguez) || (rIdx === 4 && isTT))) hasDefault = true;
+      }
+
+      if (hasDefault) {
+        window._agendaCustomSlots[dateKey][originalKey] = { name: '', type: 'empty', patient: null };
+      }
     }
     document.querySelector('.agenda-slot-overlay')?.remove();
-    const root = document.getElementById('agenda-section-root');
-    if (root) root.innerHTML = buildAgendaHtml();
+    paintAgenda();
   };
 
-  // ── Workshop card (Hall) ──
-  function renderWorkshopCard(w, idx) {
-    const progress   = Math.round((w.occupied / w.total) * 100);
-    const descPreview = w.descripcion.length > 90 ? w.descripcion.substring(0,90)+'...' : w.descripcion;
-    return `
-      <div class="card" style="border-top:3px solid ${w.color};display:flex;flex-direction:column;justify-content:space-between;height:100%;">
-        <div>
-          <h4 style="margin:0 0 4px;font-size:1rem;font-weight:700;color:var(--color-text-primary);">${w.name}</h4>
-          <p style="margin:0 0 8px;font-size:0.8rem;color:${terracotta};font-weight:600;">${w.instructor} · ${w.schedule}</p>
-          <p style="margin:0 0 16px;font-size:0.8rem;color:var(--color-text-secondary);line-height:1.5;font-style:italic;">"${descPreview}"</p>
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;margin-bottom:6px;">
-            <span style="color:var(--color-text-muted);">Capacidad máxima: <strong>${w.total} personas</strong></span>
-            <span style="color:var(--color-text-primary);font-weight:600;">${w.occupied}/${w.total}</span>
-          </div>
-          <div style="width:100%;height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-bottom:14px;">
-            <div style="width:${progress}%;height:100%;background:${w.color};border-radius:3px;transition:width 0.4s ease;"></div>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button class="button-secondary" style="flex:1;padding:7px 10px;font-size:0.8rem;"
-              onclick="window._openWorkshopModal(window._workshopsData[${idx}], ${idx})">Editar Ficha</button>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  // ════════════════════════════════════════════
-  // buildAgendaHtml — returns the agenda HTML
-  // ════════════════════════════════════════════
-  function buildAgendaHtml() {
-    try {
-      const d         = window._agendaDate;
-      const rows      = buildScheduleForDate(d);
-      const dateLabel = formatAgendaDate(d);
-      const today     = new Date(); today.setHours(0,0,0,0);
-      const isToday   = d.getTime() === today.getTime();
-
-      function roomOcc(roomIdx) {
-        const sched  = rows.filter(r => { const s=r.cols[roomIdx]; return s && s.prof && s.prof!=='—' && !s.isTaller && !s.isClosed; });
-        const booked = sched.filter(r => r.cols[roomIdx].patient);
-        return { scheduled: sched.length, booked: booked.length };
-      }
-
-      const roomDefs = [
-        { label:'Consultorio A', color:sage,       idx:0 },
-        { label:'Consultorio B', color:sage,       idx:1 },
-        { label:'Consultorio C', color:terracotta, idx:2 },
-        { label:'Consultorio D', color:sage,       idx:3 },
-        { label:'Hall (Talleres)', color:terracotta, idx:4 },
-      ];
-
-      function roomHeader(rc) {
-        if (rc.idx === 4) {
-          const n = activeWorkshops.length;
-          return `<th style="padding:10px 12px;text-align:left;border-bottom:2px solid ${rc.color}40;min-width:130px;">
-            <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${rc.color};margin-bottom:4px;">${rc.label}</div>
-            <div style="font-size:0.71rem;color:var(--color-text-muted);">${n} taller${n!==1?'es':''} activo${n!==1?'s':''}</div>
-          </th>`;
-        }
-        const occ = roomOcc(rc.idx);
-        const pct = occ.scheduled > 0 ? Math.round((occ.booked/occ.scheduled)*100) : 0;
-        return `<th style="padding:10px 12px;text-align:left;border-bottom:2px solid ${rc.color}40;min-width:130px;">
-          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${rc.color};margin-bottom:5px;">${rc.label}</div>
-          ${occ.scheduled > 0
-            ? `<div style="display:flex;align-items:center;gap:6px;">
-                 <div style="flex:1;height:4px;background:rgba(0,0,0,0.07);border-radius:2px;overflow:hidden;">
-                   <div style="width:${pct}%;height:100%;background:${rc.color};border-radius:2px;"></div>
-                 </div>
-                 <span style="font-size:0.68rem;color:var(--color-text-muted);white-space:nowrap;">${occ.booked}/${occ.scheduled}</span>
-               </div>`
-            : `<div style="font-size:0.68rem;color:var(--color-text-muted);">Sin agenda</div>`}
-        </th>`;
-      }
-
-      return `
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-          <div style="flex:1;">
-            <h2 style="margin:0 0 2px;font-size:1.4rem;">Agenda del día</h2>
-            <p style="margin:0;font-size:0.78rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;">Espacio Alvarado</p>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            ${!isToday ? `<button onclick="window._agendaGoToday()" style="padding:6px 14px;font-size:0.78rem;font-weight:700;border-radius:var(--radius-pill);background:${sage}18;color:${sage};border:1.5px solid ${sage}40;cursor:pointer;">Hoy</button>` : ''}
-            <div style="display:flex;align-items:center;background:var(--bg-card-alt);border-radius:var(--radius-pill);border:1px solid rgba(0,0,0,0.08);overflow:hidden;">
-              <button style="padding:8px 16px;background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--color-text-muted);line-height:1;transition:background 0.15s;"
-                onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='none'"
-                onclick="window._agendaNav(-1)">‹</button>
-              <div style="padding:0 16px;font-size:0.9rem;font-weight:700;color:${isToday?sage:'var(--color-text-primary)'};min-width:230px;text-align:center;white-space:nowrap;">
-                ${dateLabel}
-              </div>
-              <button style="padding:8px 16px;background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--color-text-muted);line-height:1;transition:background 0.15s;"
-                onmouseover="this.style.background='rgba(0,0,0,0.06)'" onmouseout="this.style.background='none'"
-                onclick="window._agendaNav(1)">›</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="padding:0;overflow-x:auto;">
-          <table style="width:100%;border-collapse:collapse;min-width:640px;">
-            <thead>
-              <tr style="background:var(--bg-card-alt);">
-                <th style="padding:10px 12px;text-align:left;border-bottom:2px solid rgba(0,0,0,0.08);min-width:60px;">
-                  <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--color-text-muted);">Hora</div>
-                </th>
-                ${roomDefs.map(rc => roomHeader(rc)).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${rows.map(r => renderAgendaRow(r)).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
-    } catch (err) {
-      console.error('buildAgendaHtml error:', err);
-      return '<div class="card" style="padding:24px;color:#d9534f;"><strong>Error al cargar agenda:</strong> ' + err.message + '</div>';
-    }
-  }
-
-  // paintAgenda — for navigation buttons
   function paintAgenda() {
-    const root = document.getElementById('agenda-section-root');
+    var root = document.getElementById('agenda-section-root');
     if (!root) return;
     root.innerHTML = buildAgendaHtml();
   }
@@ -507,26 +975,47 @@ window.renderMarket = function (container) {
     paintAgenda();
   };
 
-  // ════════════════════════════════════════════
+  function renderWorkshopCard(w, idx) {
+    var progress = Math.round(((w.occupied || 0) / (w.total || 15)) * 100);
+    return `
+      <div class="card" style="padding:16px 20px;display:flex;align-items:center;gap:14px;border-top:3px solid ${w.color};">
+        <div style="width:40px;height:40px;border-radius:50%;background:${w.color}20;color:${w.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.15rem;flex-shrink:0;">
+          ${w.name.charAt(0).toUpperCase()}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+            <h4 style="margin:0;font-size:0.88rem;font-weight:700;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${w.name}</h4>
+            <span style="color:var(--color-text-primary);font-weight:600;">${w.occupied}/${w.total}</span>
+          </div>
+          <div style="width:100%;height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-bottom:14px;">
+            <div style="width:${progress}%;height:100%;background:${w.color};border-radius:3px;transition:width 0.4s ease;"></div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="button-secondary" style="flex:1;padding:7px 10px;font-size:0.8rem;"
+              onclick="window._openManagerWorkshopModal(window._workshopsData[${idx}], ${idx})">Editar Ficha</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
   // Render full Inicio view
-  // ════════════════════════════════════════════
   container.innerHTML = `
     <div class="dashboard-header">
       <h1>Inicio</h1>
-      <p class="dashboard-subtitle">ESPACIO ALVARADO · GESTIÓN DIARIA</p>
+      <p class="dashboard-subtitle">ESPACIO ALVARADO \u00b7 GESTI\u00d3N DIARIA</p>
     </div>
 
-    <!-- Agenda del día — PRIMERO -->
+    <!-- Agenda del d\u00eda \u2014 PRIMERO -->
     <div id="agenda-section-root" style="margin-bottom:36px;">
       ${buildAgendaHtml()}
     </div>
 
-    <!-- Talleres activos — ABAJO -->
+    <!-- Talleres activos \u2014 ABAJO -->
     <div>
       <h3 style="margin-bottom:16px;">Talleres activos</h3>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;">
         ${activeWorkshops.map(w => {
-          const realIdx = workshops.indexOf(w);
+          var realIdx = workshops.indexOf(w);
           return renderWorkshopCard(w, realIdx);
         }).join('')}
       </div>
